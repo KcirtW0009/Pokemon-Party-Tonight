@@ -103,9 +103,10 @@ export interface DittoState extends BaseGame {
   resultTitle: string | null;
 }
 
-export type ServerGame = MatchState | BattleState | PixelState | DittoState;
+export type ServerGame = MatchState | BattleState | PixelState | DittoState | import('./batch/core').BatchState;
 
 export interface ServerRoom {
+  revision?: number;
   code: string;
   hostId: string;
   players: ServerPlayer[];

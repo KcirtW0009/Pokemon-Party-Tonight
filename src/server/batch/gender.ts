@@ -1,0 +1,15 @@
+import pairs from '../../../data/gender-wiki.json';
+import {batchImage} from './imageAssets';
+import {type BatchModule,type BatchState,type BatchContext,shuffleWith,nextRound,turn,finish,point} from './core';
+export const GENDER_POOL=pairs.filter(p=>p.verified);
+interface Board {odd:number;urls:string[];errors:number;cooldown:number;solved:boolean;score:number;ready:boolean}
+interface Data {pool:number[];pair:number;boards:Record<string,Board>;startedAt:number|null;comparison:{male:string;female:string}}
+function begin(g:BatchState,c:BatchContext){const d=g.data as Data;d.pair=d.pool[g.round-1];d.startedAt=null;const pair=GENDER_POOL[d.pair],size=g.round<=3?9:16;d.comparison={male:batchImage(pair.male),female:batchImage(pair.female)};d.boards={};for(const id of g.participants){const odd=Math.floor(c.random()*size),base=c.random()<.5;d.boards[id]={odd,urls:Array.from({length:size},(_,i)=>batchImage((i===odd)!==base?pair.male:pair.female)),errors:0,cooldown:0,solved:false,score:0,ready:false};}g.phase='loading';turn(g,null,c.now+90000);}
+function play(g:BatchState,c:BatchContext){const d=g.data as Data;d.startedAt=c.now;g.phase='question';turn(g,null,c.now+c.ms.question);}
+function reveal(g:BatchState,c:BatchContext){g.completedRounds++;g.phase='reveal';turn(g,null,c.now+c.ms.questionReveal);}
+export const gender:BatchModule={
+ create(g,c){g.totalRounds=c.settings.genderRounds;if(g.totalRounds>GENDER_POOL.length)throw new Error('题数超过已核验素材数量');g.data={pool:shuffleWith(GENDER_POOL.map((_,i)=>i),c.random).slice(0,g.totalRounds),pair:0,boards:{},startedAt:null,comparison:{male:'',female:''}} satisfies Data;begin(g,c);},
+ action(g,id,a,c){const d=g.data as Data,b=d.boards[id];if(!b)return '旁观玩家不能作答';if(a.type==='asset-failed'){finish(g,'图片加载失败，本场停止，已完成题目的得分保留');return null;}if(a.type==='assets-ready'&&g.phase==='loading'){b.ready=true;if(c.online.every(p=>d.boards[p]?.ready))play(g,c);return null;}if(g.phase!=='question')return '当前不能作答';if(b.solved)return '本题已答对';if(c.now<b.cooldown)return '请等待两秒后再试';if(!Number.isInteger(a.index)||Number(a.index)<0||Number(a.index)>=b.urls.length)return '无效位置';if(a.index===b.odd){b.solved=true;b.score=Math.max(0,Math.ceil(100*((g.deadline??c.now)-c.now)/c.ms.question)-20*b.errors);point(g,id,b.score);if(c.online.every(p=>d.boards[p]?.solved))reveal(g,c);}else{b.errors++;b.cooldown=c.now+2000;}return null;},
+ advance(g,c){if(g.deadline!==null&&c.now>=g.deadline){if(g.phase==='loading')finish(g,'图片未能及时加载，本场停止');else if(g.phase==='question')reveal(g,c);else if(g.phase==='reveal'){if(g.round>=g.totalRounds)finish(g);else{nextRound(g);begin(g,c);}}}},
+ snapshot(g,id){const d=g.data as Data,b=d.boards[id],pair=GENDER_POOL[d.pair],shown=g.phase==='reveal'||g.phase==='final';return {poolSize:GENDER_POOL.length,size:g.round<=3?3:4,images:b?.urls??[],errors:b?.errors??0,cooldownEndsAt:b?.cooldown??0,solved:b?.solved??false,score:b?.score??0,ready:b?.ready??false,...(shown&&b?{oddIndex:b.odd,pokemonId:pair.id,detail:pair.detail,...d.comparison}:{})};},
+};

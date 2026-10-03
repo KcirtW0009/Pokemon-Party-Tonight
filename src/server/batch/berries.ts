@@ -1,0 +1,13 @@
+import {finish,nextRound,nextOnline,point,shuffleWith,turn,type BatchModule,type BatchState,type BatchContext} from './core';
+export function berryRisk(fruit:number,bombs:number,k:number):number {if(k<1||k>fruit+bombs)return 0;if(k>fruit)return 1;let safe=1;for(let i=0;i<k;i++)safe*=(fruit-i)/(fruit+bombs-i);return 1-safe;}
+interface BerryData {fruit:number;bombs:number;deliveryUsed:string[];roundStart:Record<string,number>;last:{playerId:string;type:string;amount:number;gain:number;before:{fruit:number;bombs:number};after:{fruit:number;bombs:number}}|null;exploded:boolean}
+const data=(g:BatchState)=>g.data as BerryData;
+function begin(g:BatchState,c:BatchContext,used:string[]=[]){g.data={fruit:12,bombs:1,deliveryUsed:used,roundStart:{...g.points},last:null,exploded:false} satisfies BerryData;g.phase='turn';turn(g,g.participants[(g.round-1)%g.participants.length],c.now+c.ms.turn);}
+export const snorlaxBerries:BatchModule={
+ create(g,c){g.totalRounds=c.settings.berryRounds;begin(g,c);},
+ action(g,id,a,c){const d=data(g);if(g.phase!=='turn'||g.currentPlayerId!==id)return '还没轮到你';const before={fruit:d.fruit,bombs:d.bombs};if(a.type==='delivery'){if(d.deliveryUsed.includes(id))return '整场外卖已经用过';d.deliveryUsed.push(id);point(g,id,-2);d.roundStart[id]-=2;d.fruit=12;d.bombs++;d.last={playerId:id,type:'delivery',amount:0,gain:-2,before,after:{fruit:d.fruit,bombs:d.bombs}};return null;}if(a.type!=='take'||![1,2,3].includes(a.amount as number))return '只能拿 1、2 或 3 个';const k=a.amount as number;if(k>d.fruit+d.bombs)return '剩余数量不足';const bag=shuffleWith([...Array(d.fruit).fill(false),...Array(d.bombs).fill(true)],c.random);const drawn=bag.slice(0,k);const bombCount=drawn.filter(Boolean).length;d.fruit-=k-bombCount;d.bombs-=bombCount;const gain=bombCount?-2:k;point(g,id,gain);d.exploded=bombCount>0;if(bombCount)g.completedRounds++;d.last={playerId:id,type:bombCount?'bomb':'safe',amount:k,gain,before,after:{fruit:d.fruit,bombs:d.bombs}};g.phase=bombCount?'roundResult':'feedback';g.deadline=c.now+c.ms.feedback*(bombCount?2:1);return null;},
+ advance(g,c){if(g.phase==='final'||g.deadline===null||c.now<g.deadline)return;const d=data(g);if(g.phase==='roundResult'){if(g.round>=g.totalRounds)finish(g);else{nextRound(g);begin(g,c,d.deliveryUsed);}}else{g.phase='turn';turn(g,nextOnline(g,c,g.currentPlayerId),c.now+c.ms.turn);}},
+ snapshot(g){const d=data(g);return {fruit:d.fruit,bombs:d.bombs,total:d.fruit+d.bombs,deliveryUsed:[...d.deliveryUsed],risk:[1,2,3].map(k=>({amount:k,probability:berryRisk(d.fruit,d.bombs,k),available:k<=d.fruit+d.bombs})),last:d.last,exploded:d.exploded};},
+ abort(g){if(g.phase!=='roundResult')g.points={...data(g).roundStart};},
+};
+

@@ -12,3 +12,7 @@ qa/
 .env.*
 !.env.example
 .deploy/
+assets/gender-source.html
+assets/gender-review/
+assets/gender-contact.png
+assets/berry-source.html

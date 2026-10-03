@@ -9,9 +9,12 @@
     "typecheck": "tsc --noEmit",
     "build:data": "node scripts/build-pokemon.mjs && node scripts/build-clue-tags.mjs",
     "build:clue-tags": "node scripts/build-clue-tags.mjs",
-    "test:logic": "tsx scripts/logic-test.ts && tsx scripts/revision-test.ts && tsx scripts/view-test.ts",
+    "test:logic": "tsx scripts/logic-test.ts && tsx scripts/revision-test.ts && tsx scripts/view-test.ts && tsx scripts/batch-test.ts && tsx scripts/third-test.ts",
+    "test:third": "node scripts/third-multiplayer.mjs",
+    "test:auction": "tsx scripts/auction-simulation.ts",
+    "test:batch": "node scripts/batch-multiplayer.mjs",
     "smoke": "node scripts/multiplayer-test.mjs",
-    "validate:data": "node scripts/validate-data.mjs",
+    "validate:data": "node scripts/validate-data.mjs && node scripts/validate-batch-assets.mjs",
     "test": "npm run validate:data && npm run test:logic && npm run smoke"
   },
   "dependencies": {

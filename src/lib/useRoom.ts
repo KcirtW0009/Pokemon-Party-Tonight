@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { syncClock } from './clock';
+import {isSecondGame} from './secondTypes';
 import type {
   ClientToServerEvents,
   GameType,
@@ -73,6 +74,7 @@ export function useRoom(code: string): {
   actions: RoomActions;
 } {
   const [view, setView] = useState<RoomView | null>(null);
+  const viewRef=useRef<RoomView|null>(null);
   const [status, setStatus] = useState<'need-nickname' | 'connecting' | 'in-room' | 'error'>('connecting');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -123,6 +125,8 @@ export function useRoom(code: string): {
     setError(null);
 
     const onState = (v: RoomView) => {
+      if(viewRef.current?.code===v.code&&(v.revision??0)<(viewRef.current.revision??0))return;
+      viewRef.current=v;
       if (v.code.toUpperCase() !== code.toUpperCase()) return;
       syncClock(v.serverTime);
       setView(v);
@@ -167,7 +171,11 @@ export function useRoom(code: string): {
   const gameAction = useCallback(
     (action: unknown): Promise<string | null> =>
       new Promise((resolve) => {
-        getSharedSocket().emit('game-action', { action }, (res) => {
+        const v=viewRef.current,g=v?.game;
+        const meta=g&&'matchId' in g?{roomId:v!.code,matchId:g.matchId,roundId:g.roundId,turnId:g.turnId,actionId:crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random()}`} : undefined;
+        const timer=setTimeout(()=>resolve('连接超时，请检查最新画面'),7000);
+        getSharedSocket().emit('game-action', { action,meta }, (res) => {
+          clearTimeout(timer);
           if (!res) return resolve(null);
           resolve(res.ok ? null : (res.error ?? '操作失败'));
         });

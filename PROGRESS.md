@@ -1,7 +1,17 @@
 # Pokémon Party V0.1 progress
 
 ## Current phase
-V0.1 implementation and verification complete. Existing implementation retained; the pasted user brief in SPEC.md supersedes the older specification.
+V0.1 retained. Second batch adds seven authoritative multiplayer games (11 total), following second-patch-games.md and the user's scoring/round/timeout clarifications. Development remains on port 3100.
+
+## Second batch verification (2026-10-04)
+- Seven games support room start, play, result, and return to lobby. Competitive raw totals convert to 100/50/25 podium points; driving is cooperative and awards zero room points.
+- Gender library expanded from 12 to all 103 species/form pairs located in the 52poke list; downloaded, contact-sheet reviewed, and manifest hashes checked. 239 used PNG assets are local.
+- Existing logic: 72 + 5,299 checks and retained-choice view test passed. New rules: 68,989 checks passed before additional deadline/frame/award regression checks.
+- Existing four games: 819 real multiplayer checks (2/3/8 clients) passed. Seven new games: 1,716 actual Socket.IO checks passed with three clients, spectator joins, duplicate/stale actions, host migration and token reconnection.
+- Driving acknowledgment measured locally: 135 accepted samples, median 3ms, max 7ms. This does not establish public network latency or frame rate.
+- Browser checked all seven games at 390px, plus desktop lobby. Exercised flip actions, Chinese search/guess, delivery cost/risk, and driving persistent input. No console errors in that session.
+- Real mobile touch cancellation, public weak-network load, and long-running stress remain untested. The room is still in memory and server restarts clear rooms.
+- Protocol, asset attribution, settings and commands: SECOND_GAMES.md. Browser evidence: qa/eleven-game-lobby.png (local, ignored).
 
 ## Completed
 - Audited existing source, documentation, and tests.
@@ -54,3 +64,16 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 - Production build and 72 base + 5,299 revision checks pass. Actual Match component output verifies ten retained candidates, one highlight and submission locking. Browser visual QA remains unavailable because its automation transport is closed.
 - 819 complete multiplayer checks pass for 2/3/8 clients. The new version was built separately on Tencent Cloud, then the service switched to it, preserving the original directory as a rollback backup.
 - Public HTTP 200 and production room/timing checks pass. Dedicated public tests verify shared prompts/candidates, private selection retained through countdown, pixel attempts persisting across reconnect and longer than the old three-second cooldown, and unlock at the next clarity stage.
+
+## Third batch — 2026-10-04
+- All 16 games registered; lobby game grid scrolls while keeping original layout.
+- Rocket discussions have no timer; host advances each question and ends the final discussion.
+- Third rules: 3,044 checks pass, plus existing 72 / 5,299 / 68,993 and view checks.
+- Five third games completed with three real Socket.IO clients, 356 checks; private payloads and identical final scores verified.
+- 10,000 auction boxes and 15,000 heuristic strategy matches simulated; results in data/auction-simulation.json. Values remain experimental; three-person human balance trial pending.
+- 103 verified gender pairs and 254 locally sourced batch PNGs validate.
+- This is local development work; public deployment status will be recorded after verification.
+
+- Browser QA: five third game interfaces reviewed at 390px, Rocket draft and Auction tool purchases, dice call and Meloetta local preview/confirmed obstacle exercised. Fixed long-button overflow. Lobby contains 16 buttons in a 360px scroll region; 768px tablet uses 420px region without horizontal overflow. Screenshots in qa/.
+- Latest second-batch real Socket.IO regression: 1,692 assertions; drive acknowledgments median 2ms / max 4ms locally (not public latency).
+

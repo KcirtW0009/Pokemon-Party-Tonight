@@ -2,6 +2,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createRoom, lsNickname } from '@/lib/useRoom';
+import {GAME_META} from '@/lib/types';
 
 export default function Home() {
   const router = useRouter();
@@ -42,10 +43,7 @@ export default function Home() {
         <div className="home-title">宝可梦派对</div>
         <div className="home-sub">和朋友一起玩 · 2–8 人 · 手机电脑都能玩</div>
         <div className="mt" style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <span className="pill">🎭 谁是百变怪</span>
-          <span className="pill blue">👾 像素猜宝可梦</span>
-          <span className="pill green">🤝 默契挑战</span>
-          <span className="pill red">⚔️ 宝可梦猜拳</span>
+          {Object.values(GAME_META).map(meta=><span className="pill" key={meta.name}>{meta.icon} {meta.name}</span>)}
         </div>
       </div>
 

@@ -1,11 +1,12 @@
 'use client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { BattleGame } from '@/components/games/BattleGame';
 import { DittoGame } from '@/components/games/DittoGame';
 import { MatchGame } from '@/components/games/MatchGame';
 import { PixelGame } from '@/components/games/PixelGame';
+import {BatchGame} from '@/components/games/BatchGame';
 import { Lobby } from '@/components/Lobby';
 import { useRoom } from '@/lib/useRoom';
 
@@ -14,6 +15,7 @@ export default function RoomPage({ params }: { params: { code: string } }) {
   const { view, status, error, notice, actions } = useRoom(code);
   const router = useRouter();
   const [nick, setNick] = useState('');
+  useEffect(()=>{window.scrollTo({top:0,behavior:'instant' as ScrollBehavior});},[view?.status]);
 
   const goHome = () => {
     actions.leaveRoom();
@@ -83,6 +85,7 @@ export default function RoomPage({ params }: { params: { code: string } }) {
       {status === 'in-room' && view && view.status !== 'LOBBY' && view.game?.game === 'ditto' && (
         <DittoGame view={view} game={view.game} actions={actions} />
       )}
+      {status==='in-room'&&view&&view.status!=='LOBBY'&&view.game&&'matchId' in view.game&&<BatchGame view={view} game={view.game} actions={actions}/>}
 
       {notice && <div className="toast">{notice}</div>}
     </main>

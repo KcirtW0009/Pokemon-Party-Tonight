@@ -20,6 +20,9 @@ import {
   type ServerRoom,
 } from './state';
 import { cleanNickname, roomCode, uid } from './util';
+import {isSecondGame,SECOND_DEFAULTS} from '@/lib/secondTypes';
+import {batchView,startBatch,handleBatchAction,advanceBatch} from './batch';
+import {GENDER_POOL} from './batch/gender';
 
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
@@ -37,9 +40,12 @@ function buildView(room: ServerRoom, playerId: string): RoomView {
     else if (room.game.kind === 'battle') game = battleView(room, playerId);
     else if (room.game.kind === 'pixel') game = pixelView(room, playerId);
     else if (room.game.kind === 'ditto') game = dittoView(room, playerId);
+    else game = batchView(room,playerId);
   }
   return {
     serverTime: Date.now(),
+    revision: room.revision??0,
+    genderPoolSize:GENDER_POOL.length,
     code: room.code,
     hostId: room.hostId,
     players: room.players.map((p) => ({
@@ -64,6 +70,7 @@ function socketOf(io: IOServer, socketId: string | null): TypedSocket | null {
 
 export function registerRoomHandlers(io: IOServer): void {
   const broadcast: Broadcast = (room) => {
+    room.revision=(room.revision??0)+1;
     for (const p of room.players) {
       const s = socketOf(io, p.socketId);
       if (s && p.connected) s.emit('room-state', buildView(room, p.id));
@@ -111,7 +118,7 @@ export function registerRoomHandlers(io: IOServer): void {
     }
     const existing = room.players.find(p => p.socketId === socket.id);
     if (existing) return { id: existing.id, sessionToken: existing.sessionToken! };
-    if (room.status !== 'LOBBY') return { error: '游戏进行中，请等朋友返回大厅再加入' };
+    if (room.status !== 'LOBBY' && !isSecondGame(room.game?.kind)) return { error: '游戏进行中，请等朋友返回大厅再加入' };
     if (room.players.length >= 8) return { error: '房间已满（8 人）' };
     if (room.players.some((p) => p.nickname === nickname)) {
       return { error: `昵称「${nickname}」已被使用，换个名字吧` };
@@ -152,7 +159,7 @@ export function registerRoomHandlers(io: IOServer): void {
         hostId: id,
         players: [{ id, sessionToken: token, nickname, connected: true, ready: true, socketId: socket.id }],
         selectedGame: 'match',
-        settings: { pixelRounds: 10, matchRounds: 8, dittoRounds: 1, targetScore: 0 },
+        settings: { pixelRounds: 10, matchRounds: 8, dittoRounds: 1, targetScore: 0, second:{...SECOND_DEFAULTS} },
         status: 'LOBBY',
         scores: { [id]: 0 },
         game: null,
@@ -185,7 +192,7 @@ export function registerRoomHandlers(io: IOServer): void {
       code = room.code;
       myId = res.id;
       migrateHostIfNeeded(room);
-      syncDittoConnections(room, broadcast);
+      syncDittoConnections(room, broadcast);advanceBatch(room);
       ack({ ok: true, playerId: res.id, sessionToken: res.sessionToken });
       broadcast(room);
     });
@@ -200,7 +207,7 @@ export function registerRoomHandlers(io: IOServer): void {
         me.ready = false;
       }
       migrateHostIfNeeded(room);
-      syncDittoConnections(room, broadcast);
+      syncDittoConnections(room, broadcast);advanceBatch(room);
       scheduleDeleteIfEmpty(room);
       broadcast(room);
       code = null;
@@ -224,8 +231,9 @@ export function registerRoomHandlers(io: IOServer): void {
       const room = myRoom();
       if (!room || !myId || myId !== room.hostId || room.status !== 'LOBBY') return;
       const g = (payload as { game?: unknown })?.game;
-      if (g === 'ditto' || g === 'pixel' || g === 'match' || g === 'battle') {
+      if (g === 'ditto' || g === 'pixel' || g === 'match' || g === 'battle' || isSecondGame(g)) {
         room.selectedGame = g as GameType;
+        if(g==='sudowoodo-quoridor'&&activePlayers(room).length===3){room.settings.second??={...SECOND_DEFAULTS};if(room.settings.second.wallRounds%3)room.settings.second.wallRounds=3;}
         broadcast(room);
       }
     });
@@ -234,6 +242,14 @@ export function registerRoomHandlers(io: IOServer): void {
       const room = myRoom();
       if (!room || !myId || myId !== room.hostId || room.status !== 'LOBBY') return;
       const p = payload as Partial<ServerRoom['settings']>;
+      if(p?.second&&typeof p.second==='object'){
+        const s=room.settings.second??={...SECOND_DEFAULTS};
+        for(const key of ['bombRounds','genderRounds','berryRounds','relayRounds','wallRounds','auctionBoxes','diceMatches','trapRounds','luckRounds'] as const){const n=p.second[key];if(Number.isSafeInteger(n)&&n>0&&(key!=='genderRounds'||n<=GENDER_POOL.length)&&(key!=='berryRounds'||n>=3&&n<=10)&&(key!=='relayRounds'||n>=4&&n<=12)&&(key!=='auctionBoxes'||n<=15)&&(key!=='diceMatches'||n<=20))s[key]=n;}
+        if([1,2,3].includes(p.second.rocketCycles))s.rocketCycles=p.second.rocketCycles;
+        if([0,1,2,3,4].includes(p.second.rocketExcluded))s.rocketExcluded=p.second.rocketExcluded;
+        if([6,9,27].includes(p.second.memoryPairs))s.memoryPairs=p.second.memoryPairs;
+        if([60,90,120,180].includes(p.second.driveSeconds))s.driveSeconds=p.second.driveSeconds;
+      }
       if (typeof p?.pixelRounds === 'number' && PIXEL_ROUND_OPTIONS.includes(p.pixelRounds)) {
         room.settings.pixelRounds = p.pixelRounds;
       }
@@ -262,7 +278,7 @@ export function registerRoomHandlers(io: IOServer): void {
       }
       const online = activePlayers(room);
       const meta = GAME_META[room.selectedGame];
-      if (online.length < meta.minPlayers) {
+      if (online.length < meta.minPlayers || online.length > meta.maxPlayers) {
         ack({ ok: false, error: `「${meta.name}」至少需要 ${meta.minPlayers} 人` });
         return;
       }
@@ -271,15 +287,17 @@ export function registerRoomHandlers(io: IOServer): void {
         ack({ ok: false, error: `还有 ${notReady.length} 名玩家未准备` });
         return;
       }
+      if(room.selectedGame==='sudowoodo-quoridor'&&online.length===3&&(room.settings.second?.wallRounds??1)%3){ack({ok:false,error:'三人墙棋局数须为 3 的倍数，请调整局数'});return;}
       try {
         if (!room.settings.targetScore || targetReached(room)) room.scores = Object.fromEntries(room.players.map(p => [p.id, 0]));
         if (room.selectedGame === 'match') startMatch(room, broadcast);
         else if (room.selectedGame === 'battle') startBattle(room, broadcast);
         else if (room.selectedGame === 'pixel') startPixel(room, broadcast);
-        else startDitto(room, broadcast);
+        else if(room.selectedGame==='ditto') startDitto(room, broadcast);
+        else startBatch(room,broadcast);
         ack({ ok: true });
       } catch (e) {
-        ack({ ok: false, error: '开始游戏失败，请重试' });
+        ack({ ok: false, error: isSecondGame(room.selectedGame)&&e instanceof Error?e.message:'开始游戏失败，请重试' });
       }
     });
 
@@ -325,6 +343,7 @@ export function registerRoomHandlers(io: IOServer): void {
         else if (room.game.kind === 'battle') err = handleBattleAction(room, myId, action, broadcast);
         else if (room.game.kind === 'pixel') err = handlePixelAction(room, myId, action, broadcast);
         else if (room.game.kind === 'ditto') err = handleDittoAction(room, myId, action, broadcast);
+        else err=handleBatchAction(room,myId,payload,broadcast);
       } catch {
         err = '操作失败';
       }

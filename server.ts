@@ -5,6 +5,7 @@ import { registerRoomHandlers } from './src/server/rooms';
 import { resolveImageToken } from './src/server/imageTokens';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import {resolveBatchImage} from './src/server/batch/imageAssets';
 
 const dev = process.env.NODE_ENV !== 'production' && process.env.npm_lifecycle_event !== 'start';
 const port = Number(process.env.PORT ?? 3100);
@@ -17,6 +18,11 @@ async function main(): Promise<void> {
   const httpServer = createServer((req, res) => {
     // Serve in the authoritative process, sharing the actual game's token registry.
     const url = new URL(req.url ?? '/', `http://localhost:${port}`);
+    if(url.pathname==='/api/batch-image'){
+      const file=resolveBatchImage(url.searchParams.get('token'));
+      if(!file){res.writeHead(404);res.end();return;}
+      void readFile(path.join(process.cwd(),file)).then(buf=>{res.writeHead(200,{'Content-Type':'image/png','Cache-Control':'no-store'});res.end(buf);}).catch(()=>{res.writeHead(404);res.end();});return;
+    }
     if (url.pathname === '/api/pokemon-image') {
       const id = resolveImageToken(url.searchParams.get('token') ?? '');
       if (!id) { res.writeHead(404); res.end(); return; }

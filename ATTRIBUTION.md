@@ -28,3 +28,6 @@
 - 本项目为**非官方、非商业的粉丝派对游戏**，与 Nintendo、Game Freak、
   Creatures Inc.、The Pokémon Company 没有任何关联，也不声称拥有任何
   Pokémon 相关权利。图片仅在玩法需要的界面内展示。
+
+新增游戏素材来源与逐文件校验见 data/batch-assets-manifest.json。103 组性别差异图片来源为神奇宝贝百科的性别差异列表及 HOME 素材；美洛耶塔舞步立绘来源为 PokeAPI/sprites official-artwork/10018.png。素材在本地托管。
+

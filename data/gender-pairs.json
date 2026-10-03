@@ -1,0 +1,122 @@
+[
+  {
+    "id": 3,
+    "detail": "花朵中央的种子",
+    "verified": true,
+    "source": "https://www.serebii.net/blackwhite/genderdifference.shtml",
+    "male": "assets/gender-pairs/3/male.png",
+    "maleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/3.png",
+    "female": "assets/gender-pairs/3/female.png",
+    "femaleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female/3.png"
+  },
+  {
+    "id": 12,
+    "detail": "后翅的黑色斑块",
+    "verified": true,
+    "source": "https://www.serebii.net/blackwhite/genderdifference.shtml",
+    "male": "assets/gender-pairs/12/male.png",
+    "maleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/12.png",
+    "female": "assets/gender-pairs/12/female.png",
+    "femaleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female/12.png"
+  },
+  {
+    "id": 25,
+    "detail": "尾巴末端的形状",
+    "verified": true,
+    "source": "https://www.serebii.net/blackwhite/genderdifference.shtml",
+    "male": "assets/gender-pairs/25/male.png",
+    "maleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png",
+    "female": "assets/gender-pairs/25/female.png",
+    "femaleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female/25.png"
+  },
+  {
+    "id": 26,
+    "detail": "尾巴尖端的形状",
+    "verified": true,
+    "source": "https://www.serebii.net/blackwhite/genderdifference.shtml",
+    "male": "assets/gender-pairs/26/male.png",
+    "maleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/26.png",
+    "female": "assets/gender-pairs/26/female.png",
+    "femaleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female/26.png"
+  },
+  {
+    "id": 84,
+    "detail": "脖子的颜色",
+    "verified": true,
+    "source": "https://www.serebii.net/blackwhite/genderdifference.shtml",
+    "male": "assets/gender-pairs/84/male.png",
+    "maleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/84.png",
+    "female": "assets/gender-pairs/84/female.png",
+    "femaleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female/84.png"
+  },
+  {
+    "id": 85,
+    "detail": "脖子的颜色",
+    "verified": true,
+    "source": "https://www.serebii.net/blackwhite/genderdifference.shtml",
+    "male": "assets/gender-pairs/85/male.png",
+    "maleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/85.png",
+    "female": "assets/gender-pairs/85/female.png",
+    "femaleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female/85.png"
+  },
+  {
+    "id": 129,
+    "detail": "胡须的颜色",
+    "verified": true,
+    "source": "https://www.serebii.net/blackwhite/genderdifference.shtml",
+    "male": "assets/gender-pairs/129/male.png",
+    "maleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/129.png",
+    "female": "assets/gender-pairs/129/female.png",
+    "femaleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female/129.png"
+  },
+  {
+    "id": 130,
+    "detail": "胡须的颜色",
+    "verified": true,
+    "source": "https://www.serebii.net/blackwhite/genderdifference.shtml",
+    "male": "assets/gender-pairs/130/male.png",
+    "maleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/130.png",
+    "female": "assets/gender-pairs/130/female.png",
+    "femaleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female/130.png"
+  },
+  {
+    "id": 194,
+    "detail": "头部鳃枝的数量",
+    "verified": true,
+    "source": "https://www.serebii.net/blackwhite/genderdifference.shtml",
+    "male": "assets/gender-pairs/194/male.png",
+    "maleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/194.png",
+    "female": "assets/gender-pairs/194/female.png",
+    "femaleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female/194.png"
+  },
+  {
+    "id": 202,
+    "detail": "嘴唇的颜色",
+    "verified": true,
+    "source": "https://www.serebii.net/blackwhite/genderdifference.shtml",
+    "male": "assets/gender-pairs/202/male.png",
+    "maleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/202.png",
+    "female": "assets/gender-pairs/202/female.png",
+    "femaleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female/202.png"
+  },
+  {
+    "id": 214,
+    "detail": "角的形状",
+    "verified": true,
+    "source": "https://www.serebii.net/blackwhite/genderdifference.shtml",
+    "male": "assets/gender-pairs/214/male.png",
+    "maleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/214.png",
+    "female": "assets/gender-pairs/214/female.png",
+    "femaleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female/214.png"
+  },
+  {
+    "id": 415,
+    "detail": "下方脸部的红色斑点",
+    "verified": true,
+    "source": "https://www.serebii.net/blackwhite/genderdifference.shtml",
+    "male": "assets/gender-pairs/415/male.png",
+    "maleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/415.png",
+    "female": "assets/gender-pairs/415/female.png",
+    "femaleSource": "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female/415.png"
+  }
+]

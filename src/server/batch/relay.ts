@@ -1,0 +1,12 @@
+import {choose,finish,nextRound,point,turn,type BatchModule,type BatchState,type BatchContext} from './core';
+interface RelayData {holder:string;possessionId:string;startedAt:number;explodeAt:number;pressStartedAt:number|null;last:{playerId:string;type:string;gain:number;targetId?:string}|null}
+const data=(g:BatchState)=>g.data as RelayData;
+function begin(g:BatchState,c:BatchContext){const holder=choose(g.participants.filter(id=>c.online.includes(id)),c.random);g.phase='hold';turn(g,holder,null);g.data={holder,possessionId:g.turnId,startedAt:c.now,explodeAt:c.now+c.ms.relayMin+Math.floor(c.random()*(c.ms.relayMax-c.ms.relayMin+1)),pressStartedAt:null,last:null} satisfies RelayData;}
+function explode(g:BatchState,c:BatchContext){const d=data(g);point(g,d.holder,-3);g.completedRounds++;d.pressStartedAt=null;d.last={playerId:d.holder,type:'explode',gain:-3};g.phase='roundResult';turn(g,null,c.now+c.ms.feedback*2);}
+export const electrodeRelay:BatchModule={
+ create(g,c){g.totalRounds=c.settings.relayRounds;begin(g,c);},
+ action(g,id,a,c){const d=data(g);if(g.phase!=='hold')return '本轮已经爆炸';if(c.now>=d.explodeAt){explode(g,c);return '雷弹已经爆炸';}if(id!==d.holder||a.possessionId!==d.possessionId)return '不是当前持有者或持有编号已过期';if(a.type==='cancel'){d.pressStartedAt=null;return null;}if(a.type==='press'){if(d.pressStartedAt!==null)return '已经在蓄力';d.pressStartedAt=c.now;return null;}if(a.type!=='release'||d.pressStartedAt===null)return '请重新按住再松开';const held=c.now-d.pressStartedAt;d.pressStartedAt=null;if(held<500)return null;const others=c.online.filter(p=>g.participants.includes(p)&&p!==id);if(!others.length)return '没有其他在线玩家可以接收';const target=choose(others,c.random);const gain=held>=2000?1:0;point(g,id,gain);d.last={playerId:id,type:'pass',gain,targetId:target};d.holder=target;turn(g,target,null);d.possessionId=g.turnId;return null;},
+ advance(g,c){const d=data(g);if(g.phase==='hold'&&c.now>=d.explodeAt)explode(g,c);else if(g.phase==='roundResult'&&g.deadline!==null&&c.now>=g.deadline){if(g.round>=g.totalRounds)finish(g);else{nextRound(g);const online=g.participants.filter(id=>c.online.includes(id));if(!online.length)finish(g,'所有玩家已离线，剩余轮中止');else begin(g,c);}}},
+ snapshot(g,id,c){const d=data(g);const elapsed=Math.max(0,c.now-d.startedAt);return {holder:d.holder,possessionId:d.possessionId,expression:elapsed>=16000?'紧张':elapsed>=8000?'警觉':'平静',elapsed,pressStartedAt:id===d.holder?d.pressStartedAt:null,last:d.last};},
+ connections(g,c){const d=data(g);if(!c.online.includes(d.holder))d.pressStartedAt=null;},
+};
