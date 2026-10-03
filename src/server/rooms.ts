@@ -1,0 +1,345 @@
+import type { Server as IOServer, Socket } from 'socket.io';
+import type {
+  ClientToServerEvents,
+  GameType,
+  RoomView,
+  ServerToClientEvents,
+} from '@/lib/types';
+import { GAME_META } from '@/lib/types';
+import { MATCH_ROUND_OPTIONS, PIXEL_ROUND_OPTIONS, T } from './config';
+import { battleView, handleBattleAction, startBattle } from './games/battle';
+import { dittoView, handleDittoAction, startDitto, syncDittoConnections } from './games/ditto';
+import { TARGET_SCORE_OPTIONS } from '@/lib/constants';
+import { targetReached } from './score';
+import { handleMatchAction, matchView, startMatch } from './games/match';
+import { handlePixelAction, pixelView, startPixel } from './games/pixel';
+import {
+  activePlayers,
+  clearGameTimers,
+  type Broadcast,
+  type ServerRoom,
+} from './state';
+import { cleanNickname, roomCode, uid } from './util';
+
+type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
+
+const rooms = new Map<string, ServerRoom>();
+
+function getRoom(code: unknown): ServerRoom | null {
+  if (typeof code !== 'string') return null;
+  return rooms.get(code.trim().toUpperCase()) ?? null;
+}
+
+function buildView(room: ServerRoom, playerId: string): RoomView {
+  let game: RoomView['game'] = null;
+  if (room.game) {
+    if (room.game.kind === 'match') game = matchView(room, playerId);
+    else if (room.game.kind === 'battle') game = battleView(room, playerId);
+    else if (room.game.kind === 'pixel') game = pixelView(room, playerId);
+    else if (room.game.kind === 'ditto') game = dittoView(room, playerId);
+  }
+  return {
+    serverTime: Date.now(),
+    code: room.code,
+    hostId: room.hostId,
+    players: room.players.map((p) => ({
+      id: p.id,
+      nickname: p.nickname,
+      connected: p.connected,
+      ready: p.ready,
+    })),
+    selectedGame: room.selectedGame,
+    settings: { ...room.settings },
+    status: room.status,
+    scores: { ...room.scores },
+    game,
+    youId: playerId,
+  };
+}
+
+function socketOf(io: IOServer, socketId: string | null): TypedSocket | null {
+  if (!socketId) return null;
+  return (io.sockets.sockets.get(socketId) as TypedSocket | undefined) ?? null;
+}
+
+export function registerRoomHandlers(io: IOServer): void {
+  const broadcast: Broadcast = (room) => {
+    for (const p of room.players) {
+      const s = socketOf(io, p.socketId);
+      if (s && p.connected) s.emit('room-state', buildView(room, p.id));
+    }
+  };
+
+  const migrateHostIfNeeded = (room: ServerRoom) => {
+    const host = room.players.find((p) => p.id === room.hostId);
+    if (!host || !host.connected) {
+      const next = room.players.find((p) => p.connected) ?? room.players[0];
+      if (next) room.hostId = next.id;
+    }
+  };
+
+  const scheduleDeleteIfEmpty = (room: ServerRoom) => {
+    if (room.game?.kind === 'ditto' && room.game.paused) return;
+    if (room.players.some((p) => p.connected)) return;
+    if (room.deleteTimer) return;
+    room.deleteTimer = setTimeout(() => {
+      const r = rooms.get(room.code);
+      if (r && !r.players.some((p) => p.connected)) {
+        clearGameTimers(r);
+        rooms.delete(room.code);
+      }
+    }, T.emptyRoomDeleteMs);
+  };
+
+  /** Reconnection requires a private bearer token, never a public player ID. */
+  function claimSeat(
+    room: ServerRoom,
+    socket: TypedSocket,
+    nickname: string,
+    sessionToken?: string,
+  ): { id: string; sessionToken: string } | { error: string } {
+    if (room.deleteTimer) {
+      clearTimeout(room.deleteTimer);
+      room.deleteTimer = null;
+    }
+    const seat = typeof sessionToken === 'string' ? room.players.find((p) => p.sessionToken === sessionToken) : undefined;
+    if (seat) {
+      if (seat.connected && seat.socketId !== socket.id) return { error: '该玩家已在另一个窗口连接' };
+      seat.connected = true;
+      seat.socketId = socket.id;
+      return { id: seat.id, sessionToken: seat.sessionToken! };
+    }
+    const existing = room.players.find(p => p.socketId === socket.id);
+    if (existing) return { id: existing.id, sessionToken: existing.sessionToken! };
+    if (room.status !== 'LOBBY') return { error: '游戏进行中，请等朋友返回大厅再加入' };
+    if (room.players.length >= 8) return { error: '房间已满（8 人）' };
+    if (room.players.some((p) => p.nickname === nickname)) {
+      return { error: `昵称「${nickname}」已被使用，换个名字吧` };
+    }
+    const id = uid();
+    const token = uid();
+    room.players.push({ id, sessionToken: token, nickname, connected: true, ready: false, socketId: socket.id });
+    room.scores[id] = 0;
+    return { id, sessionToken: token };
+  }
+
+  io.on('connection', (raw) => {
+    const socket = raw as TypedSocket;
+    let code: string | null = null;
+    let myId: string | null = null;
+
+    const myRoom = (): ServerRoom | null => {
+      if (!code) return null;
+      const r = rooms.get(code);
+      if (!r) return null;
+      return r;
+    };
+
+    socket.on('create-room', (payload, ack) => {
+      if (typeof ack !== 'function') return;
+      if (myRoom()) { ack({ ok: false, error: '请先离开当前房间' }); return; }
+      const nickname = cleanNickname(payload?.nickname);
+      if (!nickname) {
+        ack({ ok: false, error: '请输入昵称' });
+        return;
+      }
+      let c = roomCode();
+      while (rooms.has(c)) c = roomCode();
+      const id = uid();
+      const token = uid();
+      rooms.set(c, {
+        code: c,
+        hostId: id,
+        players: [{ id, sessionToken: token, nickname, connected: true, ready: true, socketId: socket.id }],
+        selectedGame: 'match',
+        settings: { pixelRounds: 10, matchRounds: 8, dittoRounds: 1, targetScore: 0 },
+        status: 'LOBBY',
+        scores: { [id]: 0 },
+        game: null,
+        deleteTimer: null,
+      });
+      code = c;
+      myId = id;
+      ack({ ok: true, code: c, playerId: id, sessionToken: token });
+      broadcast(rooms.get(c)!);
+    });
+
+    socket.on('join-room', (payload, ack) => {
+      if (typeof ack !== 'function') return;
+      if (code && code !== String(payload?.code).trim().toUpperCase()) { ack({ ok: false, error: '请先离开当前房间' }); return; }
+      const room = getRoom(payload?.code);
+      if (!room) {
+        ack({ ok: false, error: '房间不存在，请检查房间码' });
+        return;
+      }
+      const nickname = cleanNickname(payload?.nickname);
+      if (!nickname) {
+        ack({ ok: false, error: '请输入昵称' });
+        return;
+      }
+      const res = claimSeat(room, socket, nickname, payload?.sessionToken);
+      if ('error' in res) {
+        ack({ ok: false, error: res.error });
+        return;
+      }
+      code = room.code;
+      myId = res.id;
+      migrateHostIfNeeded(room);
+      syncDittoConnections(room, broadcast);
+      ack({ ok: true, playerId: res.id, sessionToken: res.sessionToken });
+      broadcast(room);
+    });
+
+    const leaveSeat = () => {
+      const room = myRoom();
+      if (!room || !myId) return;
+      const me = room.players.find((p) => p.id === myId);
+      if (me && me.socketId === socket.id) {
+        me.connected = false;
+        me.socketId = null;
+        me.ready = false;
+      }
+      migrateHostIfNeeded(room);
+      syncDittoConnections(room, broadcast);
+      scheduleDeleteIfEmpty(room);
+      broadcast(room);
+      code = null;
+      myId = null;
+    };
+
+    socket.on('leave-room', () => leaveSeat());
+    socket.on('disconnect', () => leaveSeat());
+
+    socket.on('toggle-ready', () => {
+      const room = myRoom();
+      if (!room || !myId || room.status !== 'LOBBY') return;
+      const me = room.players.find((p) => p.id === myId);
+      if (me) {
+        me.ready = !me.ready;
+        broadcast(room);
+      }
+    });
+
+    socket.on('select-game', (payload) => {
+      const room = myRoom();
+      if (!room || !myId || myId !== room.hostId || room.status !== 'LOBBY') return;
+      const g = (payload as { game?: unknown })?.game;
+      if (g === 'ditto' || g === 'pixel' || g === 'match' || g === 'battle') {
+        room.selectedGame = g as GameType;
+        broadcast(room);
+      }
+    });
+
+    socket.on('update-settings', (payload) => {
+      const room = myRoom();
+      if (!room || !myId || myId !== room.hostId || room.status !== 'LOBBY') return;
+      const p = payload as Partial<ServerRoom['settings']>;
+      if (typeof p?.pixelRounds === 'number' && PIXEL_ROUND_OPTIONS.includes(p.pixelRounds)) {
+        room.settings.pixelRounds = p.pixelRounds;
+      }
+      if (typeof p?.matchRounds === 'number' && MATCH_ROUND_OPTIONS.includes(p.matchRounds)) {
+        room.settings.matchRounds = p.matchRounds;
+      }
+      if (typeof p?.dittoRounds === 'number' && MATCH_ROUND_OPTIONS.includes(p.dittoRounds)) room.settings.dittoRounds = p.dittoRounds;
+      if (typeof p?.targetScore === 'number' && TARGET_SCORE_OPTIONS.includes(p.targetScore)) room.settings.targetScore = p.targetScore;
+      broadcast(room);
+    });
+
+    socket.on('start-game', (ack) => {
+      if (typeof ack !== 'function') return;
+      const room = myRoom();
+      if (!room || !myId) {
+        ack({ ok: false, error: '房间不存在' });
+        return;
+      }
+      if (myId !== room.hostId) {
+        ack({ ok: false, error: '只有房主可以开始游戏' });
+        return;
+      }
+      if (room.status !== 'LOBBY') {
+        ack({ ok: false, error: '游戏已经开始' });
+        return;
+      }
+      const online = activePlayers(room);
+      const meta = GAME_META[room.selectedGame];
+      if (online.length < meta.minPlayers) {
+        ack({ ok: false, error: `「${meta.name}」至少需要 ${meta.minPlayers} 人` });
+        return;
+      }
+      const notReady = online.filter((p) => p.id !== room.hostId && !p.ready);
+      if (notReady.length > 0) {
+        ack({ ok: false, error: `还有 ${notReady.length} 名玩家未准备` });
+        return;
+      }
+      try {
+        if (!room.settings.targetScore || targetReached(room)) room.scores = Object.fromEntries(room.players.map(p => [p.id, 0]));
+        if (room.selectedGame === 'match') startMatch(room, broadcast);
+        else if (room.selectedGame === 'battle') startBattle(room, broadcast);
+        else if (room.selectedGame === 'pixel') startPixel(room, broadcast);
+        else startDitto(room, broadcast);
+        ack({ ok: true });
+      } catch (e) {
+        ack({ ok: false, error: '开始游戏失败，请重试' });
+      }
+    });
+
+    socket.on('kick-player', (payload) => {
+      const room = myRoom();
+      if (!room || !myId || myId !== room.hostId || room.status !== 'LOBBY') return;
+      const targetId = (payload as { playerId?: unknown })?.playerId;
+      if (typeof targetId !== 'string' || targetId === room.hostId) return;
+      const idx = room.players.findIndex((p) => p.id === targetId);
+      if (idx < 0) return;
+      const [kicked] = room.players.splice(idx, 1);
+      delete room.scores[targetId];
+      const s = socketOf(io, kicked.socketId);
+      if (s) s.emit('room-error', { message: '你被房主移出了房间' });
+      migrateHostIfNeeded(room);
+      broadcast(room);
+    });
+
+    socket.on('game-action', (payload, ack) => {
+      const respond = typeof ack === 'function' ? ack : () => {};
+      const room = myRoom();
+      if (!room || !myId) {
+        respond({ ok: false, error: '房间不存在' });
+        return;
+      }
+      if (room.status !== 'PLAYING' && room.status !== 'RESULT') {
+        respond({ ok: false, error: '游戏未开始' });
+        return;
+      }
+      if (!room.game) {
+        respond({ ok: false, error: '游戏未开始' });
+        return;
+      }
+      const me = room.players.find((p) => p.id === myId);
+      if (!me || !me.connected || me.socketId !== socket.id) {
+        respond({ ok: false, error: '你已断开连接' });
+        return;
+      }
+      const action = (payload as { action?: unknown })?.action;
+      let err: string | null = '未知游戏';
+      try {
+        if (room.game.kind === 'match') err = handleMatchAction(room, myId, action, broadcast);
+        else if (room.game.kind === 'battle') err = handleBattleAction(room, myId, action, broadcast);
+        else if (room.game.kind === 'pixel') err = handlePixelAction(room, myId, action, broadcast);
+        else if (room.game.kind === 'ditto') err = handleDittoAction(room, myId, action, broadcast);
+      } catch {
+        err = '操作失败';
+      }
+      if (err) respond({ ok: false, error: err });
+      else respond({ ok: true });
+    });
+
+    socket.on('back-to-lobby', () => {
+      const room = myRoom();
+      if (!room || !myId || myId !== room.hostId) return;
+      clearGameTimers(room);
+      room.game = null;
+      room.status = 'LOBBY';
+      for (const p of room.players) p.ready = p.id === room.hostId;
+      broadcast(room);
+    });
+  });
+}

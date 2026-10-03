@@ -1,0 +1,13 @@
+node_modules/
+.next/
+out/
+dist/
+*.local
+.DS_Store
+data/source-cache/
+*.tsbuildinfo
+public/pokemon/official-artwork/*.tmp
+qa/
+.env
+.env.*
+!.env.example

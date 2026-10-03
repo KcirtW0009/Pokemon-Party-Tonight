@@ -1,0 +1,32 @@
+{
+  "name": "pokemon-party-tonight",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx server.ts",
+    "build": "npm run validate:data && next build && node scripts/build-server.mjs",
+    "start": "node dist/server.cjs",
+    "typecheck": "tsc --noEmit",
+    "build:data": "node scripts/build-pokemon.mjs",
+    "test:logic": "tsx scripts/logic-test.ts && tsx scripts/revision-test.ts",
+    "smoke": "node scripts/multiplayer-test.mjs",
+    "validate:data": "node scripts/validate-data.mjs",
+    "test": "npm run validate:data && npm run test:logic && npm run smoke"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "socket.io": "4.7.5",
+    "socket.io-client": "4.7.5"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.0",
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0",
+    "esbuild": "^0.21.5",
+    "pinyin-pro": "3.19.0",
+    "tsx": "4.16.2",
+    "typescript": "5.5.3"
+  }
+}

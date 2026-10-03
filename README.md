@@ -1,0 +1,98 @@
+# Pokémon Party Tonight / 宝可梦派对
+
+2–8 人中文在线宝可梦派对游戏平台（V0.1）。浏览器直接游玩，手机 + PC 均可，无需注册，通过房间码邀请朋友。
+
+首发 4 款小游戏：谁是百变怪 / 像素猜宝可梦 / 训练家默契挑战 / 宝可梦猜拳。
+
+## Setup
+
+要求：Node.js 18+。
+
+这是 Codex/C 实现。**开发与测试固定使用 http://localhost:3100；3100 为本项目预留端口。请勿使用 3000，该端口属于另一套独立实现。**
+
+```bash
+npm install          # 安装依赖
+npm run build:data   # 生成 data/pokemon.json + 下载图片到 public/pokemon (只需跑一次)
+npm run dev          # 开发模式 (Next.js + Socket.IO 同端口)
+```
+
+打开 http://localhost:3100 。
+
+生产构建 / 运行：
+
+```bash
+npm run build
+npm run start
+```
+
+类型检查：`npm run typecheck`。
+
+## Architecture
+
+- `server.ts`：自定义 Node 服务器，同时托管 Next.js 页面与 Socket.IO。房间状态全在服务器内存 (`rooms` Map)，服务器是唯一权威。
+- `src/server/rooms.ts`：房间管理（创建/加入/离开/准备/选游戏/开始/返回大厅/踢人/断线与房主迁移/计分）。
+- `src/server/games/`：四款游戏的服务端逻辑（`ditto.ts` `pixel.ts` `match.ts` `battle.ts`），各自维护回合状态、私有信息与计时器。
+- `src/app/`：Next.js 页面（首页 + 房间页 + 像素图片 token 代理）。
+- `src/components/`：共享组件（Lobby, PlayerList, Scoreboard, Timer, PokemonCard, PokemonSelector, Reveal, RoundResult, FinalRanking, GameRules）+ 四款游戏视图。
+- `src/lib/types.ts`：前后端共享的协议类型。
+- `data/pokemon.json`：本地静态宝可梦数据；`data/questions.json`：默契挑战题库。
+- 私有信息（百变怪身份、手牌、像素答案、投票前不可见的选择）只发给允许的玩家。
+
+## Pokémon data source & attribution
+
+- 图片素材主来源：[PokeAPI/sprites](https://github.com/PokeAPI/sprites)，
+  仅使用 `sprites/pokemon/other/official-artwork/` 默认官方立绘；
+  全国图鉴 ID 直接映射文件名（如 `#260` → `official-artwork/260.png`）；
+  由 `scripts/build-pokemon.mjs` 下载到本地 `public/pokemon/official-artwork/{id}.png`，
+  游戏引用 `/pokemon/official-artwork/{id}.png`，游玩时不依赖远程图片 URL。
+- 数值与中文名来源：[PokéAPI](https://pokeapi.co/)（构建期生成 `data/pokemon.json`）。
+- V0.1 仅收录全国图鉴 No.1–1025 基础形态（无 Mega / 超极巨 / 地区形态 / 换装 / 闪光）。
+- 完整版权与权利声明见 [ATTRIBUTION.md](./ATTRIBUTION.md)。
+  Pokémon © Nintendo / Creatures Inc. / GAME FREAK inc.；
+  本项目为非官方非商业粉丝作品，与上述公司无关。
+
+## 联机与部署
+
+- `npm run build` 同时构建 Next.js 前端和 `dist/server.cjs`。`npm start` 使用编译后的 Node 服务，默认生产模式，不需要运行时 TypeScript 编译。
+- 默认端口 3100；使用环境变量 `PORT` 配置。Node 服务器监听所有网络接口。手机和电脑连同一 Wi-Fi 时，手机访问 `http://电脑的局域网IP:3100`，然后输入同一房间码。`localhost` 只表示当前设备。
+- 远程部署需一个支持长期 Node 进程和 WebSocket 的主机，代理 `/socket.io/` 时保留 WebSocket upgrade。保持单实例；不要使用静态网站托管或自动多实例扩容。
+- 部署目录保留 `.next/`、`dist/`、`public/`、`package.json`、`package-lock.json`、`next.config.js` 及依赖。使用 `npm ci` 后构建。房间保存在内存，重启后消失，不使用数据库。
+- 2–8 人；只有谁是百变怪需要 3 人。非房主先准备，房主选择游戏并开始。完成后由当前房主返回同一大厅。
+- 默认每场独立计分。可开启房间目标积分（500 / 1000 / 2000 / 5000），在不同游戏之间累计；达到目标后像素/默契在当前轮结算后结束、百变怪在当前局结束，猜拳始终完成五次比拼。下一场自动重置分数开启新积分赛。
+- 像素默认 10 轮，默契默认 8 题，百变怪默认 1 局，三者均可自定义 1–20；猜拳固定一场、5 张手牌比拼 5 次。
+- 昵称 1–16 个 Unicode 字符，去掉首尾空白；同一房间拒绝重名。断线座位保留供重连，房主可以在大厅移除座位。
+- 房主断线立即迁移。私有随机 session token 存在当前浏览器标签页的 sessionStorage，刷新/断线自动重连保留身份。公开 playerId 不可认领座位；不要分享 session token。新玩家需等游戏返回大厅才能加入。
+- 默契每题生成所有玩家共享、顺序相同的 10 只候选；飞行、水、电、冰等明确条件题只抽符合属性的候选。45 秒未提交时从本题候选随机选。猜拳选牌限时 60 秒，超时随机使用一张剩余手牌。
+- 像素每轮最多 90 秒，六个清晰度阶段各 15 秒，全部在线玩家猜中可提前结算；未猜中得 0 分。
+- 百变怪每轮存活玩家依序报一个 1–12 字的短语（每人最多 60 秒，超时显示未报词），随后进入不限时场外讨论。房主点击结束讨论，其他存活玩家每阶段可发一次公开提醒。出局房主仅保留结束讨论/开始下一局的管理权限。
+- 百变怪投票限时 45 秒，秘密提交，全部存活玩家提交后结算；超时算弃权。弃权严格超过存活人数一半则继续报词；否则最高票者出局。平票对候选复投一次，可弃权；再次平票继续报词。禁止自投。
+- 被投出的训练家公示“不是百变怪”，只能观战；百变怪活到最后两人获胜 +200。百变怪被抓有 30 秒猜答案机会，猜中翻盘 +150；猜错或超时，所有训练家（含出局/离线者）各 +100。身份与答案在本局结算公开，多局由房主点击下一局重新抽取。
+- 百变怪开局获得一条私人模糊线索，后续不追加。断线保留存活身份，计时按上述规则推进；所有存活玩家离线时暂停，重连恢复剩余计时，不因空房 60 秒规则删除暂停中的推理局。讨论始终等待房主主动结束。其他游戏断线玩家不阻塞在线全员提交，已提交内容保留。
+- 所有客户端以服务器 deadline 显示倒计时，并同步服务器时间偏差。所有判分、抽选、身份、手牌、投票都由服务端决定。
+- 像素图片通过随机无意义 token 传递，不在网络 URL/房间状态中暴露图鉴 ID 或名字。客户端 Canvas 实现逐级像素化；这不防御专门的图像匹配作弊，符合 V0.1 的轻量保护目标。
+
+## 数据再生成与校验
+
+完整本地数据/图片已经生成。`npm run build:data` 从 PokéAPI 获取 #001–#1025 的标准图鉴数据，简体中文名称、英文名称、拼音、一至两种属性、六项种族值、米/千克尺寸；从 PokeAPI/sprites 下载一致的官方立绘。按图鉴 ID 生成本地路径，游玩不请求远程 API。
+
+### 百变怪线索梯度
+
+体重参照神奇宝贝百科的[打草结](https://wiki.52poke.com/wiki/打草结（招式）)现行分档：小于 10kg、10–不足 25kg、25–不足 50kg、50–不足 100kg、100–不足 200kg、200kg 以上，分别提示轻盈、轻巧、中等体重、敦实、沉重、非常沉重。
+
+[身高](https://wiki.52poke.com/zh-hans/身高)和[种族值](https://wiki.52poke.com/wiki/种族值)提供基础概念，没有统一的六档提示词标准。本游戏自行设定身高边界 0.5 / 1 / 1.5 / 2 / 3m，分别为小巧、矮小、中等身高、高挑、高大、非常高大；每项种族值按小于 50、50–79、80–109、110 以上提示偏低、适中、较高、很高。只显示提示词，不显示精确数值。
+
+属性线索只透露一种属性，双属性不会一起给出。每条候选线索在当前 1,025 只图鉴中须至少对应 30 只，否则排除；先随机选可用类别，再随机选该类别线索，避免六项能力值挤占其他类别。测试穷举全部图鉴，确保每只都有满足隐私门槛的可用线索。
+
+源 JSON 缓存在 `data/source-cache/`（不提交），已有有效图片复用。失败时命令报错，不输出缺条目或远程回退数据；重跑可继续。搜索支持中文片段、大小写无关英文/拼音和编号，并包括 `juzhaoguai` 的常见输入别名。
+
+```bash
+npm run validate:data  # 1025 唯一连续 ID、中文名、数值、全部本地 PNG、50 道题
+npm run typecheck
+npm run test:logic     # 规则、平局/复投、隐私、冷却、重复操作
+npm run build
+npm run smoke          # 真实生产服务器，2/3/8 Socket.IO 客户端完整游戏与断线测试
+```
+
+运行 smoke 时先关闭占用 3100 的开发/生产服务；它启动独立测试服务器并使用缩短计时，结束后清理该服务器。`PPT_FAST=1` 仅用于测试，请勿在朋友游玩时开启。若已手动启动 fast 服务器，使用 `QA_EXTERNAL=1` 跑 smoke，可复用它；该模式不会停止外部服务器。
+
+UI 验证使用真实浏览器独立标签页，覆盖首页创建/加入、共享大厅、手机窄屏、搜索/键盘提交、手牌和最终排名。当前验证记录见 PROGRESS.md。
