@@ -7,7 +7,6 @@ export const T = {
   battlePickMs: FAST ? 1500 : 60000,
   revealMs: FAST ? 800 : 6000,
   pixelStageMs: FAST ? 400 : 15000,
-  pixelGuessLockMs: 3000,
   dittoConfirmMs: FAST ? 1200 : 30000,
   dittoSpeakMs: FAST ? 2000 : 60000,
   dittoVoteMs: FAST ? 1500 : 45000,

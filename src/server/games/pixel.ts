@@ -29,7 +29,7 @@ export function startPixel(room: ServerRoom, broadcast: Broadcast): void {
     token: '',
     stage: 0,
     solved: {},
-    locks: {},
+    attemptedStages: {},
     endsAt: null,
     revealEndsAt: null,
     result: null,
@@ -58,7 +58,7 @@ function nextRound(room: ServerRoom, broadcast: Broadcast): void {
   g.token = createImageToken(id);
   g.stage = 0;
   g.solved = {};
-  g.locks = {};
+  g.attemptedStages = {};
   g.result = null;
   g.phase = 'guess';
   g.endsAt = Date.now() + T.pixelStageMs;
@@ -117,8 +117,8 @@ export function handlePixelAction(
     return '请选择一只宝可梦';
   }
   if (g.solved[playerId]) return '你已经猜中了';
-  const now = Date.now();
-  if ((g.locks[playerId] ?? 0) > now) return '猜错锁定中，请稍候';
+  if (g.attemptedStages[playerId] === g.stage) return '本清晰度已猜过，请等待下一档';
+  g.attemptedStages[playerId] = g.stage;
   if (pokemonId === g.pokemonId) {
     const points = PIXEL_SCORES[Math.min(g.stage, PIXEL_SCORES.length - 1)];
     g.solved[playerId] = { stage: g.stage, points };
@@ -131,9 +131,8 @@ export function handlePixelAction(
     }
     return null;
   }
-  g.locks[playerId] = now + T.pixelGuessLockMs;
   broadcast(room);
-  return '猜错了，锁定 3 秒';
+  return g.stage === LAST_STAGE ? '猜错了，本轮已没有猜测机会' : '猜错了，下一档清晰度可再猜一次';
 }
 
 export function pixelView(room: ServerRoom, playerId: string): PixelView {
@@ -148,8 +147,8 @@ export function pixelView(room: ServerRoom, playerId: string): PixelView {
     imageToken: g.phase === 'guess' ? g.token : null,
     endsAt: g.phase === 'guess' ? g.endsAt : null,
     mySolved: !!g.solved[playerId],
+    myAttempted: g.attemptedStages[playerId] === g.stage,
     myScore: g.solved[playerId]?.points ?? 0,
-    myLockedUntil: (g.locks[playerId] ?? 0) > Date.now() ? g.locks[playerId] : null,
     solvedCount: Object.keys(g.solved).length,
     playerCount: active.length,
     result: g.phase === 'reveal' ? g.result : null,

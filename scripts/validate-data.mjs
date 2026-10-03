@@ -21,5 +21,15 @@ for (let id = 1; id <= 1025; id++) {
 }
 for (const id of [1,25,260,1025]) console.log(`#${id} ${data[id-1].nameZh} / ${data[id-1].nameEn}`);
 const questions = JSON.parse(await readFile('data/questions.json', 'utf8'));
+const tags = JSON.parse(await readFile('data/clue-tags.json', 'utf8'));
+assert.equal(tags.length, 1025);
+for (const [i, tag] of tags.entries()) {
+  assert.equal(tag.id, i + 1);
+  assert.ok(tag.shape && tag.color && tag.eggGroups.length);
+  assert.equal(typeof tag.hasOtherForms, 'boolean');
+  assert.equal(typeof tag.formsSwitchable, 'boolean');
+  assert.ok(['base', 'middle', 'evolved', 'single'].includes(tag.evolution));
+}
 assert.ok(questions.length >= 50 && new Set(questions.map(q => q.id)).size === questions.length);
-console.log('Validated 1,025 species, local PNGs, stats, Chinese names, and 50 questions.');
+assert.ok(questions.every(q => !q.text.includes('左边') && !q.text.includes('右边')));
+console.log('Validated 1,025 species and clue tags, local PNGs, stats, Chinese names, and 50 questions.');

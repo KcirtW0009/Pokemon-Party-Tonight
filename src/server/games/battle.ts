@@ -3,7 +3,19 @@ import { BATTLE_STATS } from '@/lib/types';
 import { BATTLE_ROUNDS, T } from '../config';
 import { getPokemon } from '../pokedex';
 import { activePlayers, after, clearGameTimers, type Broadcast, type BattleState, type ServerRoom } from '../state';
-import { sample, sampleIds } from '../util';
+import { sample, sampleIds, shuffle } from '../util';
+
+/** Competition ranking: tied places share points and consume the following places. */
+export function rankBattle(values: Record<string, number>, direction: 'highest' | 'lowest') {
+  const ranks: Record<string, number> = {};
+  const gains: Record<string, number> = {};
+  for (const [id, value] of Object.entries(values)) {
+    const rank = 1 + Object.values(values).filter(v => direction === 'highest' ? v > value : v < value).length;
+    ranks[id] = rank;
+    gains[id] = [100, 50, 25][rank - 1] ?? 0;
+  }
+  return { ranks, gains, winners: Object.keys(ranks).filter(id => ranks[id] === 1) };
+}
 
 function state(room: ServerRoom): BattleState {
   const g = room.game;
@@ -21,6 +33,7 @@ export function startBattle(room: ServerRoom, broadcast: Broadcast): void {
   clearGameTimers(room);
   const hands: Record<string, number[]> = {};
   for (const p of activePlayers(room)) hands[p.id] = sampleIds(5, 1025);
+  const directions = shuffle(['highest', 'lowest', 'highest', 'lowest', sample(['highest', 'lowest'])] as ('highest' | 'lowest')[]);
   room.status = 'PLAYING';
   room.game = {
     kind: 'battle',
@@ -29,6 +42,8 @@ export function startBattle(room: ServerRoom, broadcast: Broadcast): void {
     round: 1,
     totalRounds: BATTLE_ROUNDS,
     stat: sample(BATTLE_STATS).key,
+    directions,
+    direction: directions[0],
     hands,
     initialHands: Object.fromEntries(Object.entries(hands).map(([id, hand]) => [id, [...hand]])),
     plays: {},
@@ -67,24 +82,18 @@ function finishReveal(room: ServerRoom, broadcast: Broadcast): void {
   const g = state(room);
   if (g.phase !== 'countdown') return;
   const values: Record<string, number> = {};
-  let best = -Infinity;
   for (const [pid, pokeId] of Object.entries(g.plays)) {
     const v = statValue(pokeId, g.stat);
     values[pid] = v;
-    if (v > best) best = v;
   }
-  const winners = Object.entries(values)
-    .filter(([, v]) => v === best)
-    .map(([pid]) => pid);
-  const gains: Record<string, number> = {};
+  const { ranks, gains, winners } = rankBattle(values, g.direction);
   for (const [pid, pokeId] of Object.entries(g.plays)) {
-    const gain = winners.includes(pid) ? 100 : 0;
-    gains[pid] = gain;
+    const gain = gains[pid];
     room.scores[pid] = (room.scores[pid] ?? 0) + gain;
     // 消耗手牌
     g.hands[pid] = (g.hands[pid] ?? []).filter((id) => id !== pokeId);
   }
-  g.result = { plays: { ...g.plays }, values, winners, gains };
+  g.result = { plays: { ...g.plays }, values, winners, gains, ranks };
   g.phase = 'reveal';
   g.endsAt = null;
   g.revealEndsAt = Date.now() + T.revealMs;
@@ -105,6 +114,7 @@ function nextRound(room: ServerRoom, broadcast: Broadcast): void {
   }
   clearGameTimers(room);
   g.round += 1;
+  g.direction = g.directions[g.round - 1];
   // 避免连续两轮同一属性
   let s = sample(BATTLE_STATS).key;
   if (s === g.stat) s = sample(BATTLE_STATS).key;
@@ -150,11 +160,12 @@ export function battleView(room: ServerRoom, playerId: string): BattleView {
   const meta = BATTLE_STATS.find((s) => s.key === g.stat);
   return {
     game: 'battle',
+    direction: g.direction,
     phase: g.phase,
     round: g.round,
     totalRounds: g.totalRounds,
     stat: g.stat,
-    statLabel: meta ? `${meta.label}${meta.unit ? `（${meta.unit}）` : ''}最高` : null,
+    statLabel: meta ? `${meta.label}${meta.unit ? `（${meta.unit}）` : ''}${g.direction === 'highest' ? '最高' : '最低'}` : null,
     endsAt: g.phase === 'pick' || g.phase === 'countdown' ? g.endsAt : null,
     myHand: [...(g.hands[playerId] ?? [])],
     myUsed: (g.initialHands[playerId] ?? []).filter(id => !(g.hands[playerId] ?? []).includes(id)),

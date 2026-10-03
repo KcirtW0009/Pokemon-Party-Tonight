@@ -39,6 +39,8 @@ export interface MatchState extends BaseGame {
 }
 
 export interface BattleState extends BaseGame {
+  direction: 'highest' | 'lowest';
+  directions: ('highest' | 'lowest')[];
   kind: 'battle';
   phase: 'pick' | 'countdown' | 'reveal' | 'final';
   round: number;
@@ -53,6 +55,7 @@ export interface BattleState extends BaseGame {
 }
 
 export interface PixelState extends BaseGame {
+  attemptedStages: Record<string, number>;
   kind: 'pixel';
   phase: 'guess' | 'reveal' | 'final';
   round: number;
@@ -62,7 +65,6 @@ export interface PixelState extends BaseGame {
   token: string;
   stage: number;
   solved: Record<string, { stage: number; points: number }>;
-  locks: Record<string, number>;
   endsAt: number | null;
   revealEndsAt: number | null;
   result: PixelRoundResult | null;

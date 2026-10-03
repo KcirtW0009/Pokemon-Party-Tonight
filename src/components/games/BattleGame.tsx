@@ -97,7 +97,7 @@ export function BattleGame({ view, game, actions }: { view: RoomView; game: Batt
         <div className="card">
           <h2 className="center">🎉 同时揭晓！</h2>
           <div className="hand-grid" style={{ gridTemplateColumns: 'repeat(auto-fit,minmax(100px,1fr))' }}>
-            {Object.entries(game.result.plays).map(([pid, pokeId]) => {
+            {Object.entries(game.result.plays).sort(([a], [b]) => game.result!.ranks[a] - game.result!.ranks[b]).map(([pid, pokeId]) => {
               const p = getPokemon(pokeId);
               if (!p) return null;
               const win = game.result!.winners.includes(pid);
@@ -109,7 +109,7 @@ export function BattleGame({ view, game, actions }: { view: RoomView; game: Batt
                     value={game.result!.values[pid]}
                     sub={nameOf(view, pid)}
                   />
-                  <div className="center">{win ? '👑 胜 +100' : `+${game.result!.gains[pid] ?? 0}`}</div>
+                  <div className="center">{win ? '👑 ' : ''}第 {game.result!.ranks[pid]} 名 · +{game.result!.gains[pid] ?? 0} 分</div>
                 </div>
               );
             })}
@@ -121,7 +121,7 @@ export function BattleGame({ view, game, actions }: { view: RoomView; game: Batt
       <GameRules
         icon="⚔️"
         name="宝可梦猜拳"
-        lines={['每人 5 只随机手牌，共 5 轮', '每轮按随机属性比大小，一牌只能用一次', '胜者 +100 分，平局者都 +100']}
+        lines={['每人 5 只随机手牌，共 5 轮，至少两轮比最高、两轮比最低', '每轮按随机属性和高低方向排名，一牌只能用一次', '第 1 / 2 / 3 名分别 +100 / 50 / 25 分，其余 0 分', '同数值并列同名次、同分，并列占用后续名次（如 1、1、3）']}
       />
     </div>
   );

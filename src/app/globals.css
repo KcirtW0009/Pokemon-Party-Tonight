@@ -503,6 +503,7 @@ h3 {
 }
 .candidate-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; }
 .candidate-grid img { max-width:100%; object-fit:contain; }
+.candidate-grid .game-opt.sel { border-color:var(--blue); }
 .lobby-layout .select { min-width:0; flex:1; }
 .lobby-layout .row > span { flex-shrink:0; }
 .word-row { display:flex; justify-content:space-between; gap:16px; padding:12px 0; border-bottom:1px solid var(--line,#eee); overflow-wrap:anywhere; }

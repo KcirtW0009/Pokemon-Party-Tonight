@@ -77,10 +77,10 @@ async function battle(cs) {
     }
     await phase(cs, 'battle', 'countdown', r); check(cs.every(c => !c.view.game.result), 'battle choice private');
     await phase(cs, 'battle', 'reveal', r); const g = cs[0].view.game;
-    const max = Math.max(...Object.values(g.result.values));
     for (const [pid,id] of Object.entries(g.result.plays)) {
       check(g.result.values[pid] === dex[id-1][g.stat], 'dataset stat correct');
-      check(g.result.gains[pid] === (g.result.values[pid] === max ? 100 : 0), 'winner points correct');
+      const rank=1+Object.values(g.result.values).filter(v=>g.direction==='highest'?v>g.result.values[pid]:v<g.result.values[pid]).length;
+      check(g.result.ranks[pid]===rank && g.result.gains[pid]===([100,50,25][rank-1]??0),'direction and podium points correct');
     }
   }
   await phase(cs, 'battle', 'final'); check(cs[0].view.game.round === 5, 'five battle rounds'); await lobby(cs);
@@ -97,7 +97,7 @@ async function pixel(cs) {
       check((await fetch(`${URL}/api/pokemon-image?token=nope`)).status === 404, 'invalid image denied');
       check(!(await action(cs[0], { pokemonId: 1026 })).ok, 'invalid dex denied');
       const attempt = await action(cs[0], { pokemonId: 260 });
-      if (!attempt.ok) check(!(await action(cs[0], { pokemonId: 25 })).ok, 'cooldown enforced');
+      if (!attempt.ok) check(!(await action(cs[0], { pokemonId: 25 })).ok, 'one attempt per stage enforced');
     }
     for (let s = 1; s <= 5; s++) {
       await until(() => cs.every(c => c.view.game.phase === 'guess' && c.view.game.stage === s), `stage ${s}`);

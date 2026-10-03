@@ -17,6 +17,8 @@
 - 取自 [PokéAPI](https://pokeapi.co/)（`pokemon` / `pokemon-species` 接口），
   构建期生成 `data/pokemon.json`，运行时不再请求外部 API。
 - 中文名来自 PokéAPI 的简体中文（`zh-hans`）名称，拼音由构建脚本生成。
+- 分类线索取自同一物种接口的蛋组、身体形状、颜色、前置进化、其他形态和可切换形态字段，由 `scripts/build-clue-tags.mjs` 生成本地 `data/clue-tags.json`。
+- 分类玩法参考用户提供的 [Pokennection](https://www.pokennection.com/) 思路；没有复制其题库或素材，标签来自 PokéAPI，中文提示词与筛选规则由本项目整理。
 
 ## 版权声明（重要）
 

@@ -1,10 +1,9 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { MatchView, Pokemon, RoomView } from '@/lib/types';
 import { getPokemon } from '@/lib/pokemon';
 import type { RoomActions } from '@/lib/useRoom';
 import { PokemonCard } from '../PokemonCard';
-import { PokemonSelector } from '../PokemonSelector';
 import { FinalRanking, GameRules } from '../Scoreboard';
 import { Countdown } from '../Timer';
 
@@ -15,6 +14,7 @@ function nameOf(view: RoomView, id: string): string {
 export function MatchGame({ view, game, actions }: { view: RoomView; game: MatchView; actions: RoomActions }) {
   const [err, setErr] = useState<string | null>(null);
   const isHost = view.youId === view.hostId;
+  useEffect(() => { setErr(null); }, [game.round]);
 
   const submit = async (p: Pokemon) => {
     setErr(null);
@@ -49,33 +49,31 @@ export function MatchGame({ view, game, actions }: { view: RoomView; game: Match
         <div className="muted">已提交 {game.submittedCount}/{game.playerCount}</div>
       </div>
 
-      {game.phase === 'pick' && (
+      {(game.phase === 'pick' || game.phase === 'countdown') && (
         <div className="card">
-          <Countdown endsAt={game.endsAt} totalMs={45000} />
-          {game.myPick ? (
+          <Countdown endsAt={game.endsAt} totalMs={game.phase === 'pick' ? 45000 : 3000} />
+          {game.myPick && (
             <div className="center mt">
               <p>
                 ✅ 已提交：
-                <b>{getPokemon(game.myPick)?.nameZh}</b>，等待其他玩家…
+                <b>{getPokemon(game.myPick)?.nameZh}</b>，{game.phase === 'countdown' ? '等待揭晓…' : '等待其他玩家…'}
               </p>
-              <span className="spin">🌀</span>
             </div>
-          ) : (
+          )}
             <div className="mt">
               <p className="muted center">从共同的 10 只候选中选择，猜你和朋友最有默契的一只。</p>
               <div className="candidate-grid">
                 {game.candidateIds.map(id => {
                   const p = getPokemon(id);
-                  return p && <button className="game-opt" key={`${game.round}-${id}`} onClick={() => submit(p)}><img src={p.image} alt="" width={88} height={88} /><div>{p.nameZh}</div></button>;
+                  return p && <button className={`game-opt${game.myPick === id ? ' sel' : ''}`} aria-pressed={game.myPick === id} disabled={game.myPick !== null || game.phase !== 'pick'} key={`${game.round}-${id}`} onClick={() => submit(p)}><img src={p.image} alt="" width={88} height={88} /><div>{p.nameZh}</div>{game.myPick === id && <span className="pill">✓ 已选择</span>}</button>;
                 })}
               </div>
               {err && <p className="center" style={{ color: 'var(--red)' }}>⚠️ {err}</p>}
             </div>
-          )}
         </div>
       )}
 
-      {game.phase === 'countdown' && <div className="card center"><h2>准备揭晓！</h2><Countdown endsAt={game.endsAt} totalMs={3000} /></div>}
+      {game.phase === 'countdown' && <div className="card center"><h2>准备揭晓！</h2></div>}
 
       {game.phase === 'reveal' && game.result && (
         <div className="card">

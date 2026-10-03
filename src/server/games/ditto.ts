@@ -35,7 +35,7 @@ export function startDitto(room: ServerRoom, broadcast: Broadcast): void {
   room.game = {
     kind: 'ditto', timers: [], phase: 'confirm', round, totalRounds: room.settings.dittoRounds,
     participantIds, aliveIds: [...participantIds], eliminatedIds: [], cycle: 0, words: [], reminders: [], notice: null,
-    clue: randomClue(getPokemon(pokemonId)!), paused: false, pausedRemainingMs: null,
+    clue: randomClue(getPokemon(pokemonId)!, participantIds.length), paused: false, pausedRemainingMs: null,
     dittoId: sample(participantIds), pokemonId, confirmed: [], speakOrder: shuffle(participantIds), speakerIndex: 0,
     endsAt: null, votes: {}, candidates: null, revoted: false, tally: null, accusedId: null, dittoCaught: null,
     dittoGuess: null, gains: null, winners: null, resultTitle: null,

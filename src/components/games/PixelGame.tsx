@@ -63,7 +63,8 @@ export function PixelGame({ view, game, actions }: { view: RoomView; game: Pixel
   const [err, setErr] = useState<string | null>(null);
   const now = useNow();
   const isHost = view.youId === view.hostId;
-  const locked = game.myLockedUntil && game.myLockedUntil > now;
+  const locked = game.myAttempted;
+  useEffect(() => { setErr(null); }, [game.round, game.stage]);
 
   const guess = async (p: Pokemon) => {
     setErr(null);
@@ -124,7 +125,7 @@ export function PixelGame({ view, game, actions }: { view: RoomView; game: Pixel
               </p>
             ) : locked ? (
               <p className="center" style={{ color: 'var(--red)', fontWeight: 800 }}>
-                🔒 猜错锁定中（{Math.ceil((game.myLockedUntil! - now) / 1000)}s）…
+                🔒 {game.stage === 5 ? '本轮已没有猜测机会，等待揭晓' : '本档已猜过，图片进入下一档清晰度后可再猜'}
               </p>
             ) : (
               <PokemonSelector onSelect={guess} showImage={false} placeholder="输入宝可梦名字猜答案（无图片提示）" />
@@ -157,7 +158,7 @@ export function PixelGame({ view, game, actions }: { view: RoomView; game: Pixel
       <GameRules
         icon="👾"
         name="像素猜宝可梦"
-        lines={['图片从 8×8 马赛克逐渐变清晰，共 6 档', '越早猜中分越高（1000→100）', '猜错锁定输入 3 秒，猜中后等待他人']}
+        lines={['图片从 8×8 马赛克逐渐变清晰，共 6 档', '越早猜中分越高（1000→100）', '每档清晰度只能猜一次，猜错须等下一档；猜中后等待他人']}
       />
     </div>
   );

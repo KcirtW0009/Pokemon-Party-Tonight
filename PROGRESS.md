@@ -45,3 +45,10 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 - Production build, 2,212 logic assertions and normal production room/timing tests passed on the server.
 - Local and public HTTP 200 verified after the Lighthouse TCP 3100 rule was applied. Public Socket.IO room and normal timing tests passed from the development computer to the server's public IP.
 - See TENCENT_DEPLOYMENT.md and scripts/pokemon-party-tonight.service for operation details. Deployment keys are excluded by .gitignore.
+
+## Play-session improvements — 2026-10-04
+- All 1,025 species now have offline PokéAPI category tags. One private Ditto clue uses type, shape/color, egg group, evolution or forms, matching 30–350 species. Three/four-player clues use type/shape/color; numerical tiers removed. Free-name reversal remains.
+- Match keeps ten candidates and highlights the submitted choice through countdown; actual room nicknames replace seating references.
+- Pixel server enforces one valid attempt per clarity stage, with no three-second retry loophole.
+- Battle guarantees high/low rounds and awards 100/50/25 by competition ranking, including ties.
+- Production build and 72 base + 5,299 revision checks pass. Actual Match component output verifies ten retained candidates, one highlight and submission locking. Browser visual QA remains unavailable because its automation transport is closed.

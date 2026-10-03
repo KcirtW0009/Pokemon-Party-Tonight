@@ -61,7 +61,7 @@ export const GAME_META: Record<
     icon: '👾',
     minPlayers: 2,
     maxPlayers: 8,
-    desc: '像素图从模糊到清晰，越早猜中得分越高，猜错锁定 3 秒。',
+    desc: '像素图从模糊到清晰，每档只能猜一次，越早猜中得分越高。',
   },
   match: {
     name: '训练家默契挑战',
@@ -127,8 +127,10 @@ export interface BattleRoundResult {
   values: Record<string, number>;
   winners: string[];
   gains: Record<string, number>;
+  ranks: Record<string, number>;
 }
 export interface BattleView {
+  direction: 'highest' | 'lowest';
   game: 'battle';
   phase: 'pick' | 'countdown' | 'reveal' | 'final';
   round: number;
@@ -149,13 +151,13 @@ export interface BattleView {
 export const PIXEL_STAGES = [8, 12, 20, 32, 64, 0] as const; // 0 = 原图
 export const PIXEL_SCORES = [1000, 800, 600, 400, 250, 100];
 export const PIXEL_STAGE_MS = 15000;
-export const PIXEL_GUESS_LOCK_MS = 3000;
 
 export interface PixelRoundResult {
   pokemon: Pokemon;
   winners: { playerId: string; points: number; stage: number }[];
 }
 export interface PixelView {
+  myAttempted: boolean;
   game: 'pixel';
   phase: 'guess' | 'reveal' | 'final';
   round: number;
@@ -165,7 +167,6 @@ export interface PixelView {
   endsAt: number | null;
   mySolved: boolean;
   myScore: number;
-  myLockedUntil: number | null;
   solvedCount: number;
   playerCount: number;
   result: PixelRoundResult | null;

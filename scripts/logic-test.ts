@@ -68,6 +68,7 @@ ok(searchPokemon('巨', 5, new Set([260]), [260]).length === 0, 'selector exclud
   startBattle(room, noop);
   const g = room.game as BattleState;
   g.stat = 'speed'; // 固定属性以便断言
+  g.direction = 'highest';
   g.hands = { a: [25, 1, 4, 7, 10], b: [1, 4, 7, 10, 13] };
   ok(battleView(room, 'a').myHand.length === 5, 'battle: 每人 5 张手牌');
   ok(handleBattleAction(room, 'a', { pokemonId: 999 }, noop) === '请选择手牌中的宝可梦', 'battle: 非手牌被拒');
@@ -76,7 +77,7 @@ ok(searchPokemon('巨', 5, new Set([260]), [260]).length === 0, 'selector exclud
   await new Promise(r => setTimeout(r, 3100));
   ok(g.phase === 'reveal', 'battle: 全员出牌后 reveal');
   ok(JSON.stringify(g.result!.winners) === '["a"]', 'battle: 速度高者胜');
-  ok(g.result!.gains.a === 100 && g.result!.gains.b === 0, 'battle: 胜者+100');
+  ok(g.result!.gains.a === 100 && g.result!.gains.b === 50, 'battle: 冠军+100，亚军+50');
   ok(!g.hands.a.includes(25) && !g.hands.b.includes(1), 'battle: 用过的牌被消耗');
   // 平局
   g.phase = 'pick';
@@ -98,12 +99,12 @@ ok(searchPokemon('巨', 5, new Set([260]), [260]).length === 0, 'selector exclud
   const answer = g.pokemonId;
   const wrong = answer === 25 ? 1 : 25;
   ok(pixelView(room, 'a').imageToken === g.token && pixelView(room, 'a').stage === 0, 'pixel: 视图有 token 无答案');
-  ok((handlePixelAction(room, 'a', { pokemonId: wrong }, noop) ?? '').includes('锁定'), 'pixel: 猜错锁定3秒');
-  ok((handlePixelAction(room, 'a', { pokemonId: answer }, noop) ?? '').includes('锁定'), 'pixel: 锁定期内不能再猜');
-  g.locks = {};
+  ok((handlePixelAction(room, 'a', { pokemonId: wrong }, noop) ?? '').includes('下一档'), 'pixel: 猜错须等下一档');
+  ok((handlePixelAction(room, 'a', { pokemonId: answer }, noop) ?? '').includes('已猜过'), 'pixel: 同档不能再猜');
+  g.stage = 1;
   ok(handlePixelAction(room, 'a', { pokemonId: answer }, noop) === null, 'pixel: 猜中');
   ok(g.phase === 'guess' && pixelView(room, 'b').result === null, 'pixel: first solve does not finish other players');
-  ok(g.solved.a.points === 1000 && room.scores.a === 1000, 'pixel: 第0阶段猜中+1000');
+  ok(g.solved.a.points === 800 && room.scores.a === 800, 'pixel: 第1阶段猜中+800');
   ok(handlePixelAction(room, 'a', { pokemonId: answer }, noop) === '你已经猜中了', 'pixel: 猜中后不再接受');
   ok(handlePixelAction(room, 'b', { pokemonId: answer }, noop) === null, 'pixel: B 也猜中触发结算');
   ok(g.phase === 'reveal' && g.result!.pokemon.id === answer, 'pixel: 全员猜中进入 reveal 并公布答案');

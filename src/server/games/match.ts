@@ -2,7 +2,7 @@ import questionsRaw from '../../../data/questions.json';
 import type { MatchRoundResult, MatchView, Question } from '@/lib/types';
 import { T } from '../config';
 import { activePlayers, after, clearGameTimers, type Broadcast, type MatchState, type ServerRoom } from '../state';
-import { sampleIds, shuffle } from '../util';
+import { sample, shuffle } from '../util';
 import { ALL_POKEMON } from '../pokedex';
 import { targetReached } from '../score';
 
@@ -14,8 +14,10 @@ function state(room: ServerRoom): MatchState {
   return g;
 }
 
-function questionById(id: number): Question {
-  return QUESTIONS.find((q) => q.id === id) ?? QUESTIONS[0];
+export function questionForRoom(room: ServerRoom, id: number): Question {
+  const question = QUESTIONS.find((q) => q.id === id) ?? QUESTIONS[0];
+  const target = sample(activePlayers(room));
+  return { ...question, text: question.text.replaceAll('{player}', `「${target.nickname}」`) };
 }
 export function matchCandidates(question: Question): number[] {
   return shuffle(ALL_POKEMON.filter(p => !question.requiredType || p.types.includes(question.requiredType)).map(p => p.id)).slice(0, 10);
@@ -25,6 +27,7 @@ export function startMatch(room: ServerRoom, broadcast: Broadcast): void {
   clearGameTimers(room);
   const totalRounds = room.settings.matchRounds;
   const ids = shuffle(QUESTIONS.map((q) => q.id)).slice(0, totalRounds);
+  const question = questionForRoom(room, ids[0]);
   room.status = 'PLAYING';
   room.game = {
     kind: 'match',
@@ -32,8 +35,8 @@ export function startMatch(room: ServerRoom, broadcast: Broadcast): void {
     phase: 'pick',
     round: 1,
     totalRounds,
-    question: questionById(ids[0]),
-    candidateIds: matchCandidates(questionById(ids[0])),
+    question,
+    candidateIds: matchCandidates(question),
     questionIds: ids,
     picks: {},
     endsAt: Date.now() + T.matchPickMs,
@@ -105,7 +108,7 @@ function nextRound(room: ServerRoom, broadcast: Broadcast): void {
   }
   clearGameTimers(room);
   g.round += 1;
-  g.question = questionById(g.questionIds[g.round - 1]);
+  g.question = questionForRoom(room, g.questionIds[g.round - 1]);
   g.candidateIds = matchCandidates(g.question);
   g.picks = {};
   g.result = null;
@@ -156,7 +159,7 @@ export function matchView(room: ServerRoom, playerId: string): MatchView {
     totalRounds: g.totalRounds,
     question: g.phase === 'final' ? null : g.question,
     endsAt: g.phase === 'pick' || g.phase === 'countdown' ? g.endsAt : null,
-    myPick: g.phase === 'pick' ? (g.picks[playerId] ?? null) : null,
+    myPick: g.phase === 'pick' || g.phase === 'countdown' ? (g.picks[playerId] ?? null) : null,
     submittedCount: Object.keys(g.picks).length,
     playerCount: active.length,
     result: g.phase === 'reveal' ? g.result : null,
