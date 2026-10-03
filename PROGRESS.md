@@ -1,11 +1,11 @@
 # Pokémon Party V0.1 progress
 
 ## Current phase
-V0.1 retained. Second batch adds seven authoritative multiplayer games (11 total), following second-patch-games.md and the user's scoring/round/timeout clarifications. Development remains on port 3100.
+V0.1 retained. Second and third batches add twelve authoritative multiplayer games (16 total), following second-patch-games.md and the user's scoring/round/timeout clarifications. Development remains on port 3100.
 
 ## Second batch verification (2026-10-04)
 - Seven games support room start, play, result, and return to lobby. Competitive raw totals convert to 100/50/25 podium points; driving is cooperative and awards zero room points.
-- Gender library expanded from 12 to all 103 species/form pairs located in the 52poke list; downloaded, contact-sheet reviewed, and manifest hashes checked. 239 used PNG assets are local.
+- Gender library expanded from 12 to all 103 species/form pairs located in the 52poke list; downloaded, contact-sheet reviewed, and manifest hashes checked. 254 batch PNG assets are local after third-batch character additions.
 - Existing logic: 72 + 5,299 checks and retained-choice view test passed. New rules: 68,989 checks passed before additional deadline/frame/award regression checks.
 - Existing four games: 819 real multiplayer checks (2/3/8 clients) passed. Seven new games: 1,716 actual Socket.IO checks passed with three clients, spectator joins, duplicate/stale actions, host migration and token reconnection.
 - Driving acknowledgment measured locally: 135 accepted samples, median 3ms, max 7ms. This does not establish public network latency or frame rate.
@@ -72,8 +72,17 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 - Five third games completed with three real Socket.IO clients, 356 checks; private payloads and identical final scores verified.
 - 10,000 auction boxes and 15,000 heuristic strategy matches simulated; results in data/auction-simulation.json. Values remain experimental; three-person human balance trial pending.
 - 103 verified gender pairs and 254 locally sourced batch PNGs validate.
-- This is local development work; public deployment status will be recorded after verification.
+- Public deployment is verified in the release section below.
 
 - Browser QA: five third game interfaces reviewed at 390px, Rocket draft and Auction tool purchases, dice call and Meloetta local preview/confirmed obstacle exercised. Fixed long-button overflow. Lobby contains 16 buttons in a 360px scroll region; 768px tablet uses 420px region without horizontal overflow. Screenshots in qa/.
 - Latest second-batch real Socket.IO regression: 1,692 assertions; drive acknowledgments median 2ms / max 4ms locally (not public latency).
 
+
+## Sixteen-game public deployment — 2026-10-04
+- Release 3a8b2d6 built in a separate Tencent Cloud directory, with full data validation and 72 / 5,299 / 68,993 / 3,044 rule checks passing before switch.
+- Stable symlink switched to /home/ubuntu/ppt-release-3a8b2d6; systemd service active on 3100. Previous release retained for rollback.
+- Public HTTP 200, browser home shows all sixteen games, and desktop 1280px lobby has sixteen buttons in a 420px scroll region without horizontal overflow.
+- Five third games completed over the public network with three actual clients: 1,605 assertions, identical scores and results. Ordinary production timing used.
+- GitHub main contains the source and assets. Screenshots: qa/public-sixteen-game-lobby.png.
+
+- Seven second-batch public start/view checks pass; anonymous gender images load as valid PNGs, each player has one odd tile, readiness starts the timed question, and all three clients solve to final with positive scores.
