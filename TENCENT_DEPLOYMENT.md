@@ -33,4 +33,4 @@ Next.js was updated from 14.2.5 to 14.2.35 before deployment to address the publ
 
 Production build, 72 base assertions and 2,140 revision checks passed on Ubuntu with Node.js 24.21.0. The systemd service is enabled and active, listens on all interfaces at 3100 and returns HTTP 200 locally. Production room tests passed, including malformed events, readiness, host permissions, reconnection-related joins, privacy and normal round timing.
 
-External access timed out pending the Tencent Lighthouse TCP 3100 firewall rule. Public multiplayer verification remains pending until that rule is applied.
+After the Tencent Lighthouse TCP 3100 firewall rule was applied, the public endpoint returned HTTP 200. Real Socket.IO clients connected from the development computer to the public IP and passed the room and normal-timing tests, including readiness, host permissions, duplicate/late joins, secret choices, kicking, public words, reminders and abstention continuation.

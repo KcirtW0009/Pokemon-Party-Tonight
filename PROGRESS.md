@@ -43,5 +43,5 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 - Guangzhou Ubuntu server: Node.js 24.21.0, production service on **3100**, systemd startup and restart on failure configured.
 - Next.js updated to 14.2.35 for the published security fix before public deployment.
 - Production build, 2,212 logic assertions and normal production room/timing tests passed on the server.
-- Local server HTTP 200 verified; external TCP 3100 access timed out. Awaiting Tencent Lighthouse firewall rule, then public multiplayer verification.
+- Local and public HTTP 200 verified after the Lighthouse TCP 3100 rule was applied. Public Socket.IO room and normal timing tests passed from the development computer to the server's public IP.
 - See TENCENT_DEPLOYMENT.md and scripts/pokemon-party-tonight.service for operation details. Deployment keys are excluded by .gitignore.
