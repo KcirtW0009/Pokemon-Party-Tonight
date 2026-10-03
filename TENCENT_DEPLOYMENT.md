@@ -34,3 +34,16 @@ Next.js was updated from 14.2.5 to 14.2.35 before deployment to address the publ
 Production build, 72 base assertions and 2,140 revision checks passed on Ubuntu with Node.js 24.21.0. The systemd service is enabled and active, listens on all interfaces at 3100 and returns HTTP 200 locally. Production room tests passed, including malformed events, readiness, host permissions, reconnection-related joins, privacy and normal round timing.
 
 After the Tencent Lighthouse TCP 3100 firewall rule was applied, the public endpoint returned HTTP 200. Real Socket.IO clients connected from the development computer to the public IP and passed the room and normal-timing tests, including readiness, host permissions, duplicate/late joins, secret choices, kicking, public words, reminders and abstention continuation.
+
+## Release update (2026-10-04)
+
+The game improvements were built and tested in `/home/ubuntu/ppt-release-3210cd9` before switching. The service's stable directory `/home/ubuntu/pokemon-party-tonight` is now a symlink to that release. The original installation is preserved at `/home/ubuntu/ppt-backup-before-20261004`.
+
+Server build, 72 base and 5,299 revision checks, and the Match component output check passed. Local full multiplayer QA passed 819 checks. After switching, public production room/timing and `QA_URL=http://106.55.253.20:3100 node scripts/feedback-test.mjs` checks passed, including per-stage guess persistence across reconnect.
+
+For future updates, build a new release directory, verify it, repoint the stable symlink and restart the service. A restart clears in-memory rooms. To roll back this update, repoint the stable symlink to the preserved backup and restart:
+
+```bash
+ln -sfn /home/ubuntu/ppt-backup-before-20261004 /home/ubuntu/pokemon-party-tonight
+sudo systemctl restart pokemon-party-tonight
+```

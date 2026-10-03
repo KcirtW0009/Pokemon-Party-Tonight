@@ -4,7 +4,7 @@ const url=process.env.QA_URL??'http://localhost:3100';
 const clients=[];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(fn,ms=20000){const end=Date.now()+ms;while(Date.now()<end){if(fn())return;await sleep(20);}throw new Error('Feedback test timed out');}
-const ack=(c,e,p)=>new Promise((resolve,reject)=>c.timeout(5000).emit(e,p,(err,r)=>err?reject(err):resolve(r)));
+const ack=(c,e,...args)=>new Promise((resolve,reject)=>c.timeout(5000).emit(e,...args,(err,r)=>err?reject(err):resolve(r)));
 const action=(c,a)=>ack(c,'game-action',{action:a});
 async function client(){const c=io(url,{autoConnect:false,transports:['websocket'],reconnection:false});clients.push(c);c.on('room-state',v=>c.view=v);c.connect();await until(()=>c.connected);return c;}
 try {

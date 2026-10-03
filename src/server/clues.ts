@@ -9,7 +9,7 @@ export const TYPE_NAMES: Record<string, string> = {
 };
 const SHAPES: Record<string, string> = {
   ball: '球形身体', squiggle: '蛇形身体', fish: '带鳍的身体', arms: '有手臂、没有腿的身体',
-  blob: '身体呈团块状', upright: '双足、带尾巴的身体', legs: '有腿、没有手臂的身体',
+  blob: '有头部和躯干、没有明显手脚的身体', upright: '双足、带尾巴的身体', legs: '有腿、没有手臂的身体',
   quadruped: '四足身体', wings: '有一对翅膀的身体', tentacles: '有触手的身体', heads: '由多个身体组成',
   humanoid: '双足、不带尾巴的身体', 'bug-wings': '有两对以上翅膀的身体', armor: '多足身体',
 };

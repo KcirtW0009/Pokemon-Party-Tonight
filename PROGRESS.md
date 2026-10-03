@@ -52,3 +52,5 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 - Pixel server enforces one valid attempt per clarity stage, with no three-second retry loophole.
 - Battle guarantees high/low rounds and awards 100/50/25 by competition ranking, including ties.
 - Production build and 72 base + 5,299 revision checks pass. Actual Match component output verifies ten retained candidates, one highlight and submission locking. Browser visual QA remains unavailable because its automation transport is closed.
+- 819 complete multiplayer checks pass for 2/3/8 clients. The new version was built separately on Tencent Cloud, then the service switched to it, preserving the original directory as a rollback backup.
+- Public HTTP 200 and production room/timing checks pass. Dedicated public tests verify shared prompts/candidates, private selection retained through countdown, pixel attempts persisting across reconnect and longer than the old three-second cooldown, and unlock at the next clarity stage.
