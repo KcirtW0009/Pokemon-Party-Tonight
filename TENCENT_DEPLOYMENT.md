@@ -47,3 +47,7 @@ For future updates, build a new release directory, verify it, repoint the stable
 ln -sfn /home/ubuntu/ppt-backup-before-20261004 /home/ubuntu/pokemon-party-tonight
 sudo systemctl restart pokemon-party-tonight
 ```
+
+## Playtest revision release (2026-10-04)
+
+Active runtime release: /home/ubuntu/ppt-release-854c9cb. Previous /home/ubuntu/ppt-release-3a8b2d6 remains available for rollback. Build, data/hotspot checks, logic checks and 102 ordinary-timing public checks passed. The stable symlink and systemd port3100 remain unchanged. Full revised rules: PLAYTEST_REVISION.md.

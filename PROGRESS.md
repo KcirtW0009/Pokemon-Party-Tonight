@@ -97,3 +97,9 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 - Local data/hotspot validation, production build, and 72 / 5,299 / 69,823 / 3,466 logic checks pass. Twelve new games completed over three real sockets: 1,720 second and 348 third checks.
 - Browser QA at 390px exercised delivery confirmation, two-image zoom and real difference clicks, auction purchase/backpack/scope/use, and audio toggle. No horizontal overflow or console errors in inspected interfaces. Screenshots: qa/berries-revision.png, qa/gender-revision.png, qa/auction-revision.png.
 - Actual audio listening quality and new rules' human balance require another play session. Public rollout verification follows after deployment.
+
+## Playtest revision public rollout — 2026-10-04
+- Runtime release 854c9cb built separately on Tencent Cloud with all asset/hotspot checks and 72 / 5,299 / 69,823 / 3,466 logic checks passing.
+- Stable symlink now points to /home/ubuntu/ppt-release-854c9cb; systemd active on port3100. Prior 3a8b2d6 release retained for rollback.
+- 102 live public checks passed with ordinary timing: 120-second operations, eight-player starts including Meloetta, real anonymous-image loading and difference clicks, fixed berry plates/delivery/take, and all three auction intelligence/bid rounds with shared hints in rounds one/three.
+- Public browser driving view shows the Spinda story and existing map controls. Screenshot: qa/public-spinda-driving.png.
