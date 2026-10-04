@@ -20,7 +20,7 @@ try{
     else if(g.phase==='decode'){const sender=clients.find(c=>c.view.game.data.role==='sender'),answer=sender.view.game.data.answer;check(clients.filter(c=>c!==sender).every(c=>!('answer' in c.view.game.data)),'no answer leak');for(const c of clients.filter(c=>c!==sender&&!c.view.game.data.myGuess))await action(c,{type:'guess-sequence',picks:answer});}
     else if(g.phase==='discussion'){check(g.endsAt===null,'discussion unlimited');await action(host,{type:'next'});}
    }else if(game==='pokemon-auction'){
-    check(!('box' in g.data),'sealed box');if(g.phase==='shop')for(const c of clients.filter(c=>!g.data.ready.includes(c.view.youId)))await action(c,{type:'ready'});
+    check(!('box' in g.data),'sealed box');if(g.phase==='intel'){check(g.data.publicInfo.length===(g.data.bidRound===3?2:1),'common intelligence only first and third rounds');for(const c of clients.filter(c=>!g.data.ready.includes(c.view.youId)))await action(c,{type:'ready'});}
     else if(g.phase==='bid')for(const [i,c] of clients.entries())if(c.view.game.data.myBid===null)await action(c,{type:'bid',amount:i?0:1});
    }else if(game==='pokemon-liars-dice'&&g.phase==='turn'){
     const current=clients.find(c=>c.view.youId===g.currentPlayerId);check(clients.every(c=>!('dice' in c.view.game.data)),'private dice');if(current?.view.game.turnId===g.turnId)await action(current,g.data.call?{type:'open'}:{type:'call',count:g.data.totalDice,face:0});

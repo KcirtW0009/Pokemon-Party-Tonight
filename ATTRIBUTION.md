@@ -31,3 +31,5 @@
 
 新增游戏素材来源与逐文件校验见 data/batch-assets-manifest.json。103 组性别差异图片来源为神奇宝贝百科的性别差异列表及 HOME 素材；美洛耶塔舞步立绘来源为 PokeAPI/sprites official-artwork/10018.png。素材在本地托管。
 
+
+本次新增音效由浏览器 Web Audio 的振荡器和噪声合成，没有下载或使用第三方音频录音。

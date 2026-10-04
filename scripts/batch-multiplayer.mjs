@@ -2,6 +2,10 @@ import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {io} from 'socket.io-client';
 import {createHash} from 'node:crypto';
+import {readFileSync} from 'node:fs';
+const pairs=JSON.parse(readFileSync('data/gender-wiki.json','utf8')),hotspots=JSON.parse(readFileSync('data/gender-hotspots.json','utf8'));
+const maleHashes=pairs.map(p=>createHash('sha256').update(readFileSync(p.male)).digest('hex'));
+function hit(pair){const h=hotspots[pair];for(const r of h.regions.male)for(let y=0;y<32;y++)for(let x=0;x<32;x++){const px=(x+.5)/32,py=(y+.5)/32;if(h.masks.male[y][x]==='1'&&px>=r.x&&px<=r.x+r.width&&py>=r.y&&py<=r.y+r.height)return {side:0,x:px,y:py};}throw Error('No foreground hotspot');}
 const url=process.env.QA_URL??'http://127.0.0.1:3100',sockets=[];let checks=0,logs='',server;
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(fn,label,ms=30000){const start=Date.now();while(Date.now()-start<ms){const v=fn();if(v)return v;await wait(10);}throw new Error(`Timeout ${label}`);}
@@ -27,18 +31,18 @@ try{
   while(cs[0].view.game?.phase!=='final'){
    const g=cs[0].view.game;if(!g){await wait(10);continue;}
    if(game==='starter-memory')for(const card of g.data.cards)if(card.pokemonId)seen.set(card.index,card.pokemonId);
-   if(game==='gender-difference'&&g.phase==='loading'&&last!==g.roundId){last=g.roundId;await Promise.all(cs.map(async c=>{const cg=c.view.game,hashes=await Promise.all(cg.data.images.map(async u=>createHash('sha256').update(Buffer.from(await (await fetch(url+u)).arrayBuffer())).digest('hex')));c.odd=hashes.findIndex(h=>hashes.filter(x=>x===h).length===1);check(c.odd>=0,'anonymous images form one odd tile');await action(c,{type:'assets-ready'});}));await until(()=>cs.every(c=>c.view.game.phase==='question'),'gender ready');await Promise.all(cs.map(c=>action(c,{type:'pick',index:c.odd})));}
+   if(game==='gender-difference'&&g.phase==='loading'&&last!==g.roundId){last=g.roundId;await Promise.all(cs.map(async c=>{const cg=c.view.game;check(cg.data.images.length===2&&!('regions' in cg.data)&&!('masks' in cg.data),'two anonymous images without answer regions');const hash=createHash('sha256').update(Buffer.from(await (await fetch(url+cg.data.images[0])).arrayBuffer())).digest('hex');const pair=maleHashes.indexOf(hash);check(pair>=0,'local male image served successfully');c.hit=hit(pair);await action(c,{type:'assets-ready'});}));await until(()=>cs.every(c=>c.view.game.phase==='question'),'gender ready');await Promise.all(cs.map(c=>action(c,{type:'spot',...c.hit})));}
    else if(game==='drive-revavroom'&&['prepare','play'].includes(g.phase)&&last!==g.roundId+Math.floor(g.data.elapsed/100)){last=g.roundId+Math.floor(g.data.elapsed/100);await Promise.all(cs.map(async(c,i)=>{const now=Date.now();const r=await action(c,{type:'input',key:['up','right','left'][i],inputSeq:(c.seq??=0)+1});c.seq++;if(r.ok)latencies.push(Date.now()-now);}));check(!('maps' in g.data),'drive mapping never transmitted');}
    else if(g.phase==='turn'){
     const c=cs.find(c=>c.view.youId===g.currentPlayerId);if(c&&c.view.game.turnId===g.turnId){
      let a;if(game==='type-bomb')a={type:'guess',pokemonId:g.data.allowedPokemon[Math.floor(Math.random()*g.data.allowedPokemon.length)]};
-     if(game==='snorlax-berries')a={type:'take',amount:Math.min(3,g.data.total)};
+     if(game==='snorlax-berries'){check(g.data.plates.length===12&&!('bombs' in g.data),'12 plates hide bomb positions');a={type:'take',indices:g.data.plates.map((v,i)=>v==='full'?i:null).filter(v=>v!==null).slice(0,3)};}
      if(game==='starter-memory'){
       const available=g.data.cards.filter(x=>x.status==='back'),open=g.data.cards.find(x=>x.status==='open');let target;
       if(open)target=available.find(x=>seen.get(x.index)===open.pokemonId)??available[0];else target=available.find(x=>available.some(y=>y.index!==x.index&&seen.get(x.index)&&seen.get(y.index)===seen.get(x.index)))??available.find(x=>!seen.has(x.index))??available[0];
       if(target)a={type:'flip',index:target.index};
      }
-     // Wall games deliberately use real timeout processing to exercise auto-move and forfeits.
+     if(game==='sudowoodo-quoridor'){const d=c.view.game.data,p=d.pawns.find(p=>p.id===c.view.youId);const distance=t=>p.goal==='top'?t.y:p.goal==='bottom'?8-t.y:p.goal==='left'?t.x:8-t.x;const target=[...d.legalMoves].sort((a,b)=>distance(a)-distance(b))[0];if(target)a={type:'move',...target};}
      if(a)await action(c,a);
     }
    }

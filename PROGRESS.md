@@ -86,3 +86,14 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 - GitHub main contains the source and assets. Screenshots: qa/public-sixteen-game-lobby.png.
 
 - Seven second-batch public start/view checks pass; anonymous gender images load as valid PNGs, each player has one odd tile, readiness starts the timed question, and all three clients solve to final with positive scores.
+
+## Playtest revision — 2026-10-04
+- Second/third operation timers are 120 seconds; intrinsic relay fuse and driving map settings remain independent. Each timeout now has explicit settlement/automatic-action behavior, documented in PLAYTEST_REVISION.md.
+- Memory matches continue the player's turn. Berries use 12 fixed plates, hidden bombs, selected positions and confirmations, delivery bell, and genuine automatic first-fruit timeout outcomes.
+- Gender difference compares two images with synchronized zoom/pan and foreground-only, manually reviewed hotspots for all 103 pairs. Difference regions stay private until reveal.
+- Auction tools enter a private backpack, carry to the next box, select scope at use, and consume at most one per bidding round. All players finish intelligence before sealed bids. Rounds one and three generate shared random tool-equivalent intelligence.
+- Meloetta supports 2–8 players, retains dance until breaking an obstacle, and automatically blocks the next escape step on timeout. Driving introduces Spinda's confused directions in its description.
+- Explosion visuals and optional synthesized audio added; audio defaults off. No external audio samples.
+- Local data/hotspot validation, production build, and 72 / 5,299 / 69,823 / 3,466 logic checks pass. Twelve new games completed over three real sockets: 1,720 second and 348 third checks.
+- Browser QA at 390px exercised delivery confirmation, two-image zoom and real difference clicks, auction purchase/backpack/scope/use, and audio toggle. No horizontal overflow or console errors in inspected interfaces. Screenshots: qa/berries-revision.png, qa/gender-revision.png, qa/auction-revision.png.
+- Actual audio listening quality and new rules' human balance require another play session. Public rollout verification follows after deployment.

@@ -1,6 +1,6 @@
 # 第二批游戏
 
-依据 `second-patch-games.md` 实现七款新游戏，大厅共 11 款。开发与测试使用 **http://localhost:3100**。
+依据 `second-patch-games.md` 实现七款新游戏，当前大厅共 16 款。试玩后的计时、树果、配对和找不同规则见 [PLAYTEST_REVISION.md](PLAYTEST_REVISION.md)。开发与测试使用 **http://localhost:3100**。
 
 ## 用户确认的规则
 
@@ -24,7 +24,7 @@
 
 `data/gender-wiki.json`：神奇宝贝百科列表中的 103 组物种/形态雌雄图片，均下载本地并人工查看核对图。使用同一 HOME 渲染素材家族，保留图片原始画布。少数原图为 192px，多数为 512px；均为正方形，在同尺寸格子中等比例显示。部分物种的性别本身改变整体外形。
 
-`data/batch-assets-manifest.json`：239 张素材的原始页面、下载地址、归属、用途、本地路径、尺寸与 SHA-256。找茬素材置于 `assets/gender-wiki`，不暴露雄雌文件路径；每格随机匿名地址，正确位置只在揭晓时公开。所有在线参与者预加载完成后才开始题目计时，失败停止比赛并保留已完成题分。
+`data/batch-assets-manifest.json`：254 张素材的原始页面、下载地址、归属、用途、本地路径、尺寸与 SHA-256。找茬素材置于 `assets/gender-wiki`，不暴露雄雌文件路径；左右两图使用匿名地址，差异区域只在揭晓时公开，前景掩码不下发。所有在线参与者预加载完成后才开始题目计时，失败停止比赛并保留已完成题分。
 
 来源：[神奇宝贝百科性别差异列表](https://wiki.52poke.com/zh-hans/拥有性别差异的宝可梦列表)、[文柚果](https://wiki.52poke.com/zh-hans/文柚果)、[PokéAPI sprites](https://github.com/PokeAPI/sprites)。宝可梦图片归 Nintendo / Creatures / GAME FREAK；本项目为非官方粉丝项目，代码许可不授予图片商业授权。
 
