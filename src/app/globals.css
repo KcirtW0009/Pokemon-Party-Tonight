@@ -599,3 +599,6 @@ html { scroll-padding-top: 86px; }
 
 .room-head > .btn,.room-head-tools > .pill { flex-shrink: 0; }
 @media(max-width:600px) { .home-nav > .muted { max-width: 45%; text-align: right; } }
+
+.room-head .btn-sm,.room-head-tools .pill { white-space: nowrap; }
+@media(max-width:600px) { .invite-copy .btn { white-space: nowrap; padding-inline: 10px; font-size: 13px; } }

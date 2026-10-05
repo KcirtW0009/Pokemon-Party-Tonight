@@ -48,7 +48,7 @@ export default function Home() {
         </section>
         <section className="home-entry" aria-label="创建或加入房间">
           <div className="card">
-            <div className="home-name"><label htmlFor="nickname"><h2>先认识一下，你怎么称呼？</h2></label><input id="nickname" className="input" placeholder="比如：小智" value={nickname} maxLength={16} onChange={e=>setNickname(e.target.value)}/></div>
+            <div className="home-name"><h2><label htmlFor="nickname">先认识一下，你怎么称呼？</label></h2><input id="nickname" className="input" placeholder="比如：小智" value={nickname} maxLength={16} onChange={e=>setNickname(e.target.value)}/></div>
             <h2>开一桌新派对</h2><p className="muted">创建房间，把房间码发给朋友。</p><button className="btn btn-primary btn-block" disabled={busy||!name} onClick={onCreate}>{busy?'创建中…':'创建房间'}</button>
             <hr className="home-divider"/>
             <h2>朋友已经在等你？</h2><div className="row"><input className="input" aria-label="房间码" placeholder="4 位房间码" value={joinCode} maxLength={4} style={{textTransform:'uppercase',letterSpacing:4}} onChange={e=>setJoinCode(e.target.value.toUpperCase())} onKeyDown={e=>{if(e.key==='Enter')onJoin();}}/><button className="btn btn-blue" disabled={busy||!name} onClick={onJoin}>加入</button></div>
