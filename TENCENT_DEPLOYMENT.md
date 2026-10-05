@@ -57,3 +57,7 @@ Active runtime release: /home/ubuntu/ppt-release-854c9cb. Previous /home/ubuntu/
 Active runtime: `/home/ubuntu/ppt-release-7771a14`; previous `/home/ubuntu/ppt-release-1ac88ae` is retained for rollback. The systemd service is active on port 3100.
 
 Production build, data validation, 64 audio checks and all logic suites passed on the server. Public ordinary-timing multiplayer checks passed (102), as did public rename checks (14). Browser verification confirmed music/effects enable independently, HTTP copying returns success feedback, and the page has no console errors. Public homepage screenshot: `qa/public-home-upgrade.png`.
+
+
+## Playtest follow-up — 2026-10-06
+Active runtime: `/home/ubuntu/ppt-release-3a8eed4`; previous `/home/ubuntu/ppt-release-7771a14` is preserved. Service active, HTTP200, port3100. Server build and all rule/audio regressions passed before switch. Public ordinary-timing suite passed106 checks; public dice专项 passed103 checks (4 successful/3 failed challenges, correct life losses, retry idempotency and stale displayed-call rejection). Revised rules: THIRD_GAMES.md. Original reversed-life incident not reproduced; challenge binding protects a discovered stale-view/latest-envelope race without claiming the original cause confirmed.

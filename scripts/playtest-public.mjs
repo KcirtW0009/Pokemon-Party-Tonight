@@ -10,9 +10,9 @@ function check(v,label){assert.ok(v,label);checks++;}
 async function until(fn,label){const start=Date.now();while(Date.now()-start<20000){if(fn())return;await wait(20);}throw Error(label);}
 const ack=(c,event,...args)=>new Promise((resolve,reject)=>c.timeout(8000).emit(event,...args,(err,r)=>err?reject(err):resolve(r)));
 async function action(c,a){const g=c.view.game;const r=await ack(c,'game-action',{meta:{roomId:c.code,matchId:g.matchId,roundId:g.roundId,turnId:g.turnId,actionId:randomUUID()},action:a});return r;}
-function timer(c){const left=c.view.game.endsAt-c.view.serverTime;check(left>117000&&left<=120000,'ordinary production operation timer is 120 seconds');}
+function timer(c){const left=c.timerStarts.get(c.view.game.turnId);check(left>119000&&left<=120000,'ordinary production operation timer is 120 seconds');}
 try{
- for(let i=0;i<8;i++){const c=io(base,{transports:['websocket'],reconnection:false});clients.push(c);c.on('room-state',v=>c.view=v);await until(()=>c.connected,'connect');const r=await ack(c,i?'join-room':'create-room',{code:clients[0].code,nickname:'新版验收'+i});check(r.ok,'join');c.code=r.code??clients[0].code;}
+ for(let i=0;i<8;i++){const c=io(base,{transports:['websocket'],reconnection:false});clients.push(c);c.timerStarts=new Map();c.on('room-state',v=>{const g=v.game;if(g?.turnId&&g.endsAt&&!c.timerStarts.has(g.turnId))c.timerStarts.set(g.turnId,g.endsAt-v.serverTime);c.view=v;});await until(()=>c.connected,'connect');const r=await ack(c,i?'join-room':'create-room',{code:clients[0].code,nickname:'新版验收'+i});check(r.ok,'join');c.code=r.code??clients[0].code;}
  const h=clients[0];await until(()=>h.view?.players.length===8,'roster');
  const games=['type-bomb','starter-memory','snorlax-berries','gender-difference','rocket-secret','pokemon-liars-dice','surround-meloetta','pokemon-push-your-luck'];
  for(const game of games){
