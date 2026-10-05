@@ -64,3 +64,6 @@ Active runtime: `/home/ubuntu/ppt-release-3a8eed4`; previous `/home/ubuntu/ppt-r
 
 ## Rocket reports release — 2026-10-06
 Active runtime `/home/ubuntu/ppt-release-f1699b6`, prior `/home/ubuntu/ppt-release-3a8eed4` retained. Production build, full rules and 64 audio checks passed remotely. Report suite:27 checks covering reveal privacy, missing submissions, multi-question retention, immutable snapshots, text contents and default collapsed rendering. Public three Socket.IO clients completed three questions/two attempts each; browser verified final report archives and HTTP copying success.
+
+## Sender exclusion labels — 2026-10-06
+Active runtime /home/ubuntu/ppt-release-62ec809; previous /home/ubuntu/ppt-release-f1699b6 retained. Build/data validation passed and systemd service is active on port3100. Public sender UI verified card labels for both excluded Pokemon; qa/rocket-sender-excluded.png.

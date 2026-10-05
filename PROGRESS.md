@@ -145,3 +145,7 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 - Added 27 report/privacy/archive/render checks. Full rule suites, typecheck and local production build passed. Real browser verified initially collapsed guesses, wrong-to-correct progression, question report copy, final three-question archives and whole-match copy. Screenshots: qa/rocket-review.png, qa/rocket-match-report.png.
 
 - Runtime f1699b6 deployed on Tencent port3100 after remote build, full rule suites and 64 audio checks passed. Public three-client fixture completed three questions with two attempts each; browser verified default-collapsed final archives, per-attempt guesses and successful HTTP-compatible whole-match copy. Screenshot: qa/public-rocket-report.png. Previous 3a8eed4 release retained for rollback.
+
+## 2026-10-06 — Sender exclusion labels
+- Sender and contact now share the existing excluded marker below each candidate Pokemon name; removed the sender's small private exclusion list. Game rules and exclusion visibility permissions are unchanged.
+- Typecheck and remote production build/data validation passed. Runtime 62ec809 deployed on port3100; public browser verified both excluded candidates show their labels. Screenshot: qa/rocket-sender-excluded.png.
