@@ -64,6 +64,7 @@ export interface RoomActions {
   backToLobby: () => void;
   leaveRoom: () => void;
   joinAs: (nickname: string) => void;
+  renamePlayer: (nickname: string) => Promise<string|null>;
 }
 
 export function useRoom(code: string): {
@@ -201,6 +202,10 @@ export function useRoom(code: string): {
       joinedRef.current = false;
       getSharedSocket().emit('leave-room');
     },
+    renamePlayer: nickname=>new Promise(resolve=>{
+      const timer=setTimeout(()=>resolve('连接超时，请重试'),7000);
+      getSharedSocket().emit('rename-player',{nickname},res=>{clearTimeout(timer);if(res.ok){saveNickname(res.nickname??nickname.trim());resolve(null);}else resolve(res.error??'修改失败');});
+    }),
     joinAs: (nickname: string) => {
       const n = nickname.trim();
       if (!n) return;

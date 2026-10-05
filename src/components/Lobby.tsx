@@ -1,11 +1,12 @@
 'use client';
 import type { GameType, RoomView } from '@/lib/types';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { GAME_META } from '@/lib/types';
 import type { RoomActions } from '@/lib/useRoom';
 import { PlayerList } from './PlayerList';
 import { TARGET_SCORE_OPTIONS } from '@/lib/constants';
 import {SECOND_GAMES,SECOND_DEFAULTS,isSecondGame} from '@/lib/secondTypes';
+import {copyText} from '@/lib/clipboard';
 
 const ORDER: GameType[] = ['ditto', 'pixel', 'match', 'battle',...SECOND_GAMES];
 function RoundInput({ label, value, disabled, update }: { label: string; value: number; disabled: boolean; update: (n: number) => void }) {
@@ -15,6 +16,10 @@ function RoundInput({ label, value, disabled, update }: { label: string; value: 
 }
 
 export function Lobby({ view, actions }: { view: RoomView; actions: RoomActions }) {
+  const [copyStatus,setCopyStatus]=useState<'idle'|'copied'|'failed'>('idle');
+  useEffect(()=>setCopyStatus('idle'),[view.code]);
+  const dock=useRef<HTMLDivElement>(null),layout=useRef<HTMLDivElement>(null);
+  useEffect(()=>{const el=dock.current;if(!el)return;const resize=()=>layout.current?.style.setProperty('--lobby-dock-space',`${el.getBoundingClientRect().height+36}px`);resize();const observer=new ResizeObserver(resize);observer.observe(el);return()=>observer.disconnect();},[]);
   const isHost = view.youId === view.hostId;
   const me = view.players.find((p) => p.id === view.youId);
   const online = view.players.filter((p) => p.connected);
@@ -24,26 +29,27 @@ export function Lobby({ view, actions }: { view: RoomView; actions: RoomActions 
   const canStart = isHost && enough && notReady === 0;
 
   const copyCode = async () => {
-    try {
-      await navigator.clipboard.writeText(view.code);
-    } catch {
-      /* ignore */
-    }
+    setCopyStatus(await copyText(view.code)?'copied':'failed');
   };
 
   return (
-    <div className="lobby-layout">
-      <div className="card center">
+    <div className="lobby-layout" ref={layout}>
+      <div className="card room-invite">
+        <div>
         <div className="muted">房间码（发给朋友）</div>
         <div className="big-code">{view.code}</div>
+        </div><div className="invite-copy">
         <button className="btn btn-sm mt" onClick={copyCode}>
-          📋 复制房间码
+          {copyStatus==='copied'?'✓ 已复制房间码':'📋 复制房间码'}
         </button>
+        <p role="status" aria-live="polite">{copyStatus==='copied'?'房间码已复制，可以粘贴发给朋友。':copyStatus==='failed'?'浏览器限制了自动复制，请长按下方房间码，或选中后按 Ctrl+C / ⌘C。':''}</p>
+        {copyStatus==='failed'&&<input className="input" aria-label="手动复制房间码" readOnly value={view.code} onFocus={e=>e.currentTarget.select()} onClick={e=>e.currentTarget.select()}/>}
+        </div>
       </div>
 
       <div className="card">
         <h2>
-          👥 玩家 {online.length}/8 {isHost && '（你是房主 👑）'}
+          玩家 {online.length}/8 {isHost && '（你是房主 👑）'}
         </h2>
         <PlayerList
           players={view.players}
@@ -56,7 +62,7 @@ export function Lobby({ view, actions }: { view: RoomView; actions: RoomActions 
       </div>
 
       <div className="card">
-        <h2>🎮 选择游戏 {isHost ? '' : '（房主选择）'}</h2>
+        <h2>选择游戏 {isHost ? '' : '（房主选择）'}</h2>
         <div className="game-grid game-scroll" tabIndex={0} role="region" aria-label="游戏选择，可上下滚动">
           {ORDER.map((g) => (
             <button
@@ -79,8 +85,8 @@ export function Lobby({ view, actions }: { view: RoomView; actions: RoomActions 
       </div>
 
       {(
-        <div className="card">
-          <h2>⚙️ 游戏设置 {isHost ? '' : '（房主设置）'}</h2>
+        <div className="card lobby-settings">
+          <h2>游戏设置 {isHost ? '' : '（房主设置）'}</h2>
           {view.selectedGame === 'pixel' && (
             <div className="row">
               <span style={{ fontWeight: 800 }}>轮数</span>
@@ -110,23 +116,10 @@ export function Lobby({ view, actions }: { view: RoomView; actions: RoomActions 
         </div>
       )}
 
-      <div className="card">
-        {!isHost && (
-          <button className="btn btn-block" onClick={actions.toggleReady}>
-            {me?.ready ? '✅ 已准备（点我取消）' : '👆 点我准备'}
-          </button>
-        )}
-        {isHost && (
-          <button className="btn btn-primary btn-block" disabled={!canStart} onClick={actions.startGame}>
-            🚀 开始游戏：{meta.name}
-          </button>
-        )}
-        {!enough && (
-          <p className="muted center">{meta.name}需要至少 {meta.minPlayers} 名玩家</p>
-        )}
-        {isHost && enough && notReady > 0 && (
-          <p className="muted center">还有 {notReady} 名玩家未准备</p>
-        )}
+      <div className="lobby-dock" ref={dock} role="region" aria-label="准备与开始游戏">
+        <div><strong>{meta.name}</strong><p className="muted">{!enough?`需要 ${meta.minPlayers}–${meta.maxPlayers} 名玩家，当前 ${online.length} 人`:notReady>0?`还有 ${notReady} 名玩家未准备`:'所有人已准备，可以开局'}</p></div>
+        {!isHost&&<button className={`btn ${me?.ready?'btn-green':'btn-primary'}`} aria-pressed={!!me?.ready} onClick={actions.toggleReady}>{me?.ready?'已准备 · 点击取消':'准备好了'}</button>}
+        {isHost&&<button className="btn btn-primary" disabled={!canStart} onClick={actions.startGame}>开始游戏</button>}
       </div>
     </div>
   );

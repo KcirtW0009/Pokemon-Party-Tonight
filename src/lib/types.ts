@@ -60,7 +60,7 @@ export const GAME_META: Record<
   'starter-memory': {name:'记忆大师',icon:'🃏',minPlayers:2,maxPlayers:8,desc:'轮流翻两张牌，找出成对的御三家。'},
   'snorlax-berries': {name:'卡比兽的树果',icon:'🍒',minPlayers:2,maxPlayers:8,desc:'抽取树果得分，也可以请信使补货；当心炸弹。'},
   'electrode-relay': {name:'顽皮雷弹',icon:'⚡',minPlayers:2,maxPlayers:8,desc:'按住蓄力后松手传递，爆炸时间保密。'},
-  'gender-difference': {name:'宝可梦来找茬',icon:'🔍',minPlayers:2,maxPlayers:8,desc:'左右比较雌雄图片，放大观察并点击差异位置。'},
+  'gender-difference': {name:'宝可梦来找茬',icon:'🔍',minPlayers:2,maxPlayers:8,desc:'左右比较雌雄图片，找齐每处独立差异。'},
   'sudowoodo-quoridor': {name:'树才怪挡路',icon:'🌳',minPlayers:2,maxPlayers:4,desc:'移动到对岸，或放置墙壁改变路线。'},
   'drive-revavroom': {name:'一起开噗隆隆姆',icon:'🚗',minPlayers:2,maxPlayers:8,desc:'化身晕乎乎的晃晃斑，试探错乱的方向键，和伙伴一起驶过三张地图；合作不计分。'},
   ditto: {
@@ -251,6 +251,7 @@ export interface ClientToServerEvents {
     payload: { code: string; nickname: string; playerId?: string; sessionToken?: string },
     ack: (res: { ok: boolean; playerId?: string; sessionToken?: string; error?: string }) => void,
   ) => void;
+  'rename-player': (payload: { nickname: string }, ack: (res: {ok:boolean;nickname?:string;error?:string}) => void) => void;
   'leave-room': () => void;
   'toggle-ready': () => void;
   'select-game': (payload: { game: GameType }) => void;

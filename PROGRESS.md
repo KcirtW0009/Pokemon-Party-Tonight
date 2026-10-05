@@ -103,3 +103,16 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 - Stable symlink now points to /home/ubuntu/ppt-release-854c9cb; systemd active on port3100. Prior 3a8b2d6 release retained for rollback.
 - 102 live public checks passed with ordinary timing: 120-second operations, eight-player starts including Meloetta, real anonymous-image loading and difference clicks, fixed berry plates/delivery/take, and all three auction intelligence/bid rounds with shared hints in rounds one/three.
 - Public browser driving view shows the Spinda story and existing map controls. Screenshot: qa/public-spinda-driving.png.
+
+
+## 2026-10-05 — precise differences, clipboard and scroll follow-up
+
+- Curated 82 playable pairs from 103 unchanged source pairs; excluded 21 invisible, tiny or broad changes including Pyroar. Retained pairs contain 125 independent targets.
+- Pixel silhouettes define each difference; a separate small dilation handles click tolerance. Each target counts once across both pictures, all targets required to score, partial timeout scores zero. Masks and unfound answers remain server private. Optional detail zoom is collapsed by default.
+- HTTP public-site clipboard failure came from a secure-context-only API and swallowed errors. Added synchronous compatible copying, success feedback and manual selection fallback.
+- Removed scroll containment from game list and image panes so wheel/touch scrolling naturally reaches the page at the content boundaries.
+- Type checking, data validation, production build and logic suites passed: 72 / 5,299 / 70,666 / 3,466 checks plus room-view assertions. Three-player second-batch games passed 1,721 live checks. Browser wheel test confirmed list scrolls first (page 0), then page moves (606px) at list boundary.
+
+- Refined shared palette, borders and button hierarchy; homepage removes the game list and keeps nickname/create/join in one entry card. Desktop and mobile lobby actions are fixed at the bottom with measured content padding; home navigation remains sticky.
+- Added own-seat rename with unique-name validation and full-room broadcast. Rejoining with a private session token now updates the nickname without replacing the seat. Live 14-check regression covers rename, invalid/duplicate names, outsiders, token seat theft protection, rejoining and ongoing-game identity.
+- Browser QA confirmed desktop home and 390px mobile home show all entry controls, and room rename updates header/roster. Screenshot: qa/home-upgrade.png, qa/lobby-upgrade.png.

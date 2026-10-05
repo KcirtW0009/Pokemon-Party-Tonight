@@ -2,7 +2,6 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createRoom, lsNickname } from '@/lib/useRoom';
-import {GAME_META} from '@/lib/types';
 
 export default function Home() {
   const router = useRouter();
@@ -37,50 +36,24 @@ export default function Home() {
   };
 
   return (
-    <main className="page" style={{ maxWidth: 520 }}>
-      <div className="card center" style={{ marginTop: 24 }}>
-        <div className="home-logo">⚡🎉</div>
-        <div className="home-title">宝可梦派对</div>
-        <div className="home-sub">和朋友一起玩 · 2–8 人 · 手机电脑都能玩</div>
-        <div className="mt" style={{ display: 'flex', gap: 6, justifyContent: 'center', flexWrap: 'wrap' }}>
-          {Object.values(GAME_META).map(meta=><span className="pill" key={meta.name}>{meta.icon} {meta.name}</span>)}
-        </div>
-      </div>
+    <main className="page home-page">
+      <header className="home-nav"><div className="brand-lockup"><span className="brand-ball" aria-hidden="true"/>PARTY TONIGHT</div><span className="muted">宝可梦同好们的游戏桌</span></header>
+      <div className="home-layout">
+        <section className="home-hero">
+          <p className="home-eyebrow">POKÉMON PARTY TONIGHT</p>
+          <h1 className="home-title">今晚，一起玩。</h1>
+          <p className="home-sub">叫上朋友，开一桌宝可梦派对。猜谜、默契、心机与一点运气，手机电脑都能加入。</p>
+          <div className="home-facts"><div><b>16</b><span>款桌上小游戏</span></div><div><b>2–8</b><span>人一起玩</span></div><div><b>4 位</b><span>房间码即刻加入</span></div></div>
 
-      <div className="card">
-        <h2>👋 你的昵称</h2>
-        <input
-          className="input"
-          placeholder="比如：小智"
-          value={nickname}
-          maxLength={16}
-          onChange={(e) => setNickname(e.target.value)}
-        />
-      </div>
-
-      <div className="card">
-        <h2>🏠 创建房间</h2>
-        <p className="muted" style={{ margin: '0 0 10px' }}>创建一个房间，把房间码发给朋友们。</p>
-        <button className="btn btn-primary btn-block" disabled={busy || !name} onClick={onCreate}>
-          {busy ? '创建中…' : '创建房间'}
-        </button>
-      </div>
-
-      <div className="card">
-        <h2>🚪 加入房间</h2>
-        <div className="row">
-          <input
-            className="input"
-            placeholder="房间码（4 位）"
-            value={joinCode}
-            maxLength={4}
-            style={{ textTransform: 'uppercase', letterSpacing: 4, fontWeight: 900 }}
-            onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-          />
-          <button className="btn btn-blue" disabled={busy || !name} onClick={onJoin}>
-            加入
-          </button>
-        </div>
+        </section>
+        <section className="home-entry" aria-label="创建或加入房间">
+          <div className="card">
+            <div className="home-name"><label htmlFor="nickname"><h2>先认识一下，你怎么称呼？</h2></label><input id="nickname" className="input" placeholder="比如：小智" value={nickname} maxLength={16} onChange={e=>setNickname(e.target.value)}/></div>
+            <h2>开一桌新派对</h2><p className="muted">创建房间，把房间码发给朋友。</p><button className="btn btn-primary btn-block" disabled={busy||!name} onClick={onCreate}>{busy?'创建中…':'创建房间'}</button>
+            <hr className="home-divider"/>
+            <h2>朋友已经在等你？</h2><div className="row"><input className="input" aria-label="房间码" placeholder="4 位房间码" value={joinCode} maxLength={4} style={{textTransform:'uppercase',letterSpacing:4}} onChange={e=>setJoinCode(e.target.value.toUpperCase())} onKeyDown={e=>{if(e.key==='Enter')onJoin();}}/><button className="btn btn-blue" disabled={busy||!name} onClick={onJoin}>加入</button></div>
+          </div>
+        </section>
       </div>
 
       {err && (

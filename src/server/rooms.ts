@@ -112,12 +112,18 @@ export function registerRoomHandlers(io: IOServer): void {
     const seat = typeof sessionToken === 'string' ? room.players.find((p) => p.sessionToken === sessionToken) : undefined;
     if (seat) {
       if (seat.connected && seat.socketId !== socket.id) return { error: '该玩家已在另一个窗口连接' };
+      if(room.players.some(p=>p.id!==seat.id&&p.nickname===nickname))return {error:`昵称「${nickname}」已被使用，换个名字吧`};
+      seat.nickname=nickname;
       seat.connected = true;
       seat.socketId = socket.id;
       return { id: seat.id, sessionToken: seat.sessionToken! };
     }
     const existing = room.players.find(p => p.socketId === socket.id);
-    if (existing) return { id: existing.id, sessionToken: existing.sessionToken! };
+    if (existing) {
+      if(room.players.some(p=>p.id!==existing.id&&p.nickname===nickname))return {error:`昵称「${nickname}」已被使用，换个名字吧`};
+      existing.nickname=nickname;
+      return { id: existing.id, sessionToken: existing.sessionToken! };
+    }
     if (room.status !== 'LOBBY' && !isSecondGame(room.game?.kind)) return { error: '游戏进行中，请等朋友返回大厅再加入' };
     if (room.players.length >= 8) return { error: '房间已满（8 人）' };
     if (room.players.some((p) => p.nickname === nickname)) {
@@ -216,6 +222,16 @@ export function registerRoomHandlers(io: IOServer): void {
 
     socket.on('leave-room', () => leaveSeat());
     socket.on('disconnect', () => leaveSeat());
+
+    socket.on('rename-player',(payload,ack)=>{
+      if(typeof ack!=='function')return;
+      const room=myRoom(),me=room?.players.find(p=>p.id===myId&&p.connected&&p.socketId===socket.id);
+      if(!room||!me){ack({ok:false,error:'请先加入房间'});return;}
+      const nickname=cleanNickname(payload?.nickname);
+      if(!nickname){ack({ok:false,error:'请输入昵称'});return;}
+      if(room.players.some(p=>p.id!==me.id&&p.nickname===nickname)){ack({ok:false,error:`昵称「${nickname}」已被使用，换个名字吧`});return;}
+      me.nickname=nickname;ack({ok:true,nickname});broadcast(room);
+    });
 
     socket.on('toggle-ready', () => {
       const room = myRoom();

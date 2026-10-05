@@ -4,6 +4,8 @@ import {SECOND_DEFAULTS,type SecondGameType} from '../src/lib/secondTypes';
 import {type BatchState,type BatchContext,podium} from '../src/server/batch/core';
 import {damage,TYPE_COMBOS,inferTypes} from '../src/server/batch/typeBomb';
 import hotspotData from '../data/gender-hotspots.json';
+import {GENDER_POOL} from '../src/server/batch/gender';
+function targetHit(annotation:(typeof hotspotData)[number],target:(typeof hotspotData)[number]['targets'][number]){for(let y=0;y<128;y++)for(let x=0;x<128;x++)if(target.mask[y][x]==='1'&&annotation.targets.every(t=>t.id===target.id||t.mask[y][x]!=='1'))return {x:(x+.5)/128,y:(y+.5)/128};throw Error('No independently hittable target');}
 import {berryRisk} from '../src/server/batch/berries';
 import {combine,moveCar,validateMap} from '../src/lib/driving';
 import {DRIVE_MAPS} from '../src/server/batch/driveGame';
@@ -22,7 +24,7 @@ const pawn={id:'a',x:4,y:4,goal:'top' as const};check(moves(pawn,[pawn,{id:'b',x
 const wall=state('sudowoodo-quoridor',2);MODULES['sudowoodo-quoridor'].advance(wall,{...ctx,now:wall.deadline!});check((wall.data as any).timeouts.a===1,'wall timeout auto move');MODULES['sudowoodo-quoridor'].advance(wall,{...ctx,now:wall.deadline!});MODULES['sudowoodo-quoridor'].advance(wall,{...ctx,now:wall.deadline!});check((wall.data as any).pawns.some((p:any)=>p.id==='a')&&(wall.data as any).timeouts.a===2,'second timeout moves without forfeiting');
 const v=combine(['up','up','right'],70);check(Math.abs(v.x/v.y+.5)<1e-12&&Math.abs(Math.hypot(v.x,v.y)-70)<1e-12,'vector angle and fixed speed');check(combine(['up','down'],70).x===0&&combine(['up','down'],70).y===0,'opposites stop');for(const map of DRIVE_MAPS)check(validateMap(map),'map reachable');const thin={...DRIVE_MAPS[0],walls:[{x:65,y:0,width:2,height:400}]};check(moveCar({x:50,y:200},{x:1000,y:0},1,thin).x<=55,'thin wall cannot tunnel, catchup capped');
 const drive=state('drive-revavroom'),d=drive.data as any;for(const mapping of Object.values(d.maps))check(new Set(Object.values(mapping as object)).size===4,'mapping permutation');check(!('maps' in MODULES['drive-revavroom'].snapshot(drive,'a',ctx)),'mapping remains server only');check(MODULES['drive-revavroom'].action(drive,'a',{type:'input',key:'up',inputSeq:2},ctx)===null,'new input accepted');check(!!MODULES['drive-revavroom'].action(drive,'a',{type:'input',key:'down',inputSeq:1},ctx),'out of order input rejected');MODULES['drive-revavroom'].connections!(drive,{...ctx,online:['b','c']});check(d.inputs.a===null,'disconnect clears driving input');
-const gender=state('gender-difference'),gd=gender.data as any,gv=MODULES['gender-difference'].snapshot(gender,'a',ctx) as any;check(!('regions' in gv)&&!('masks' in gv)&&gv.images.length===2&&gv.images.every((u:string)=>u.startsWith('/api/batch-image?token=')),'hotspots hidden and only two opaque images sent');for(const id of ctx.online)MODULES['gender-difference'].action(gender,id,{type:'assets-ready'},ctx);check(gender.phase==='question','assets ready begins timed question');const annotation=hotspotData[gd.pair];const region=annotation.regions.male[0];let hit={x:0,y:0};for(let row=0;row<32;row++)for(let col=0;col<32;col++){const x=(col+.5)/32,y=(row+.5)/32;if(annotation.masks.male[row][col]==='1'&&x>=region.x&&y>=region.y&&x<=region.x+region.width&&y<=region.y+region.height)hit={x,y};}MODULES['gender-difference'].action(gender,'a',{type:'spot',side:0,x:0,y:0},ctx);check(!!MODULES['gender-difference'].action(gender,'a',{type:'spot',side:0,...hit},{...ctx,now:2999}),'wrong answer cooldown');MODULES['gender-difference'].action(gender,'a',{type:'spot',side:0,...hit},{...ctx,now:4000});check(gender.points.a===78,'120-second score minus error penalty');const room:ServerRoom={code:'TEST',hostId:'a',players:['a','b','c'].map(id=>({id,nickname:id,connected:true,ready:true,socketId:null})),selectedGame:'starter-memory',settings:{pixelRounds:1,matchRounds:1,dittoRounds:1,targetScore:0,second:SECOND_DEFAULTS},status:'PLAYING',scores:{a:0,b:0,c:0},game:state('starter-memory'),deleteTimer:null};const g=room.game as BatchState;g.deadline=Date.now()+20000;const payload={meta:{roomId:'TEST',matchId:g.matchId,roundId:g.roundId,turnId:g.turnId,actionId:'unique'},action:{type:'flip',index:0}};check(handleBatchAction(room,'a',payload,()=>{})===null,'envelope accepted');check(handleBatchAction(room,'a',payload,()=>{})===null&&(g.data as any).open.length===1,'duplicate idempotent');check(!!handleBatchAction(room,'a',{...payload,action:{type:'flip',index:1}},()=>{}),'same action id different payload rejected');check(!!handleBatchAction(room,'a',{...payload,meta:{...payload.meta,turnId:'stale',actionId:'other'}},()=>{}),'stale turn rejected');check(!!handleBatchAction(room,'spectator',{...payload,meta:{...payload.meta,actionId:'spectate'}},()=>{}),'spectator cannot play');
+const gender=state('gender-difference'),gd=gender.data as any,gv=MODULES['gender-difference'].snapshot(gender,'a',ctx) as any;check(!('regions' in gv)&&!('masks' in gv)&&gv.images.length===2&&gv.images.every((u:string)=>u.startsWith('/api/batch-image?token=')),'hotspots hidden and only two opaque images sent');for(const id of ctx.online)MODULES['gender-difference'].action(gender,id,{type:'assets-ready'},ctx);check(gender.phase==='question','assets ready begins timed question');gd.pair=0;const annotation=hotspotData[gd.pair],hit=targetHit(annotation,annotation.targets[0]);MODULES['gender-difference'].action(gender,'a',{type:'spot',side:0,x:0,y:0},ctx);check(!!MODULES['gender-difference'].action(gender,'a',{type:'spot',side:0,...hit},{...ctx,now:2999}),'wrong answer cooldown');MODULES['gender-difference'].action(gender,'a',{type:'spot',side:0,...hit},{...ctx,now:4000});check(gender.points.a===78,'120-second score minus error penalty');const room:ServerRoom={code:'TEST',hostId:'a',players:['a','b','c'].map(id=>({id,nickname:id,connected:true,ready:true,socketId:null})),selectedGame:'starter-memory',settings:{pixelRounds:1,matchRounds:1,dittoRounds:1,targetScore:0,second:SECOND_DEFAULTS},status:'PLAYING',scores:{a:0,b:0,c:0},game:state('starter-memory'),deleteTimer:null};const g=room.game as BatchState;g.deadline=Date.now()+20000;const payload={meta:{roomId:'TEST',matchId:g.matchId,roundId:g.roundId,turnId:g.turnId,actionId:'unique'},action:{type:'flip',index:0}};check(handleBatchAction(room,'a',payload,()=>{})===null,'envelope accepted');check(handleBatchAction(room,'a',payload,()=>{})===null&&(g.data as any).open.length===1,'duplicate idempotent');check(!!handleBatchAction(room,'a',{...payload,action:{type:'flip',index:1}},()=>{}),'same action id different payload rejected');check(!!handleBatchAction(room,'a',{...payload,meta:{...payload.meta,turnId:'stale',actionId:'other'}},()=>{}),'stale turn rejected');check(!!handleBatchAction(room,'spectator',{...payload,meta:{...payload.meta,actionId:'spectate'}},()=>{}),'spectator cannot play');
 room.game=state('type-bomb');const bomb=room.game as BatchState;room.players[1].connected=false;room.players[2].connected=false;advanceBatch(room,1000);check(bomb.pausedAt===1000,'low online count pauses');room.players[1].connected=true;advanceBatch(room,5000);check(bomb.pausedAt===null&&bomb.deadline===125000,'resume shifts deadline');room.players[1].connected=false;advanceBatch(room,6000);advanceBatch(room,36000);check(bomb.phase==='final'&&room.status==='RESULT'&&Object.values(room.scores).every(n=>n===0),'abort empty match no awards');
 check(podium({a:4,b:4,c:2}).ranks.c===3&&podium({a:4,b:4,c:2}).gains.c===25,'competition tie ranks');
 room.players.forEach(p=>p.connected=true);room.status='PLAYING';room.game=state('starter-memory');const late=room.game as BatchState;late.deadline=Date.now()-1;const deadlinePacket={meta:{roomId:'TEST',matchId:late.matchId,roundId:late.roundId,turnId:late.turnId,actionId:'deadline-race'},action:{type:'flip',index:0}};check(!!handleBatchAction(room,'a',deadlinePacket,()=>{})&&(late.data as any).open.length===0&&late.currentPlayerId==='b','expired action advances deadline before accepting a flip');
@@ -31,20 +33,38 @@ assert.deepEqual(simulation(20),simulation(50));count++;check(simulation(50).x>1
 room.game=state('type-bomb');const scored=room.game as BatchState;scored.phase='final';scored.completedRounds=1;scored.points={a:4,b:3,c:2};room.scores={a:0,b:0,c:0};advanceBatch(room);advanceBatch(room);check(room.scores.a===100&&room.scores.b===50&&room.scores.c===25,'final podium awarded only once');
 
 
-// Revision regressions: every gender pair supports foreground clicks on both images.
-for(const annotation of hotspotData)for(const side of [0,1] as const){
+// Every retained pair has independently hittable differences on either picture.
+check(GENDER_POOL.length===82&&!GENDER_POOL.some(p=>[46,98].includes(p.pairIndex)),'invisible Torchic and broad Pyroar removed from playable pool');
+for(const annotation of hotspotData.filter(a=>a.eligible))for(const side of [0,1] as const){
  const g=state('gender-difference'),d=g.data as any;d.pair=annotation.pairIndex;
  for(const id of ctx.online)MODULES[g.kind].action(g,id,{type:'assets-ready'},ctx);
- const key=side===0?'male':'female';let target:{x:number;y:number}|null=null;
- for(const r of annotation.regions[key])for(let row=0;row<32;row++)for(let col=0;col<32;col++){
-  const x=(col+.5)/32,y=(row+.5)/32;if(annotation.masks[key][row][col]==='1'&&x>=r.x&&x<=r.x+r.width&&y>=r.y&&y<=r.y+r.height)target={x,y};
- }
- check(!!target,'each reviewed side has a hittable visible trait');
  check(!!MODULES[g.kind].action(g,'a',{type:'spot',side,x:-1,y:NaN},ctx),'invalid coordinates rejected');
- MODULES[g.kind].action(g,'a',{type:'spot',side,...target},ctx);
- check((MODULES[g.kind].snapshot(g,'a',ctx) as any).solved,'all 103 pairs accept actual foreground difference clicks');
- check(!('masks' in MODULES[g.kind].snapshot(g,'a',ctx)),'pixel masks never leave server');
+ for(const [i,target] of annotation.targets.entries()){
+  const hit=targetHit(annotation,target);
+  check(MODULES[g.kind].action(g,'a',{type:'spot',side,...hit},ctx)===null,'visible independent difference accepted');
+  const own=MODULES[g.kind].snapshot(g,'a',ctx) as any;
+  check(own.foundCount===i+1&&own.solved===(i+1===annotation.targets.length),'each target increments once; all targets required');
+  check(own.foundTargets.length===i+1&&!('targets' in own)&&!JSON.stringify(own).includes('"mask"'),'unfound targets and masks remain private');
+  check((MODULES[g.kind].snapshot(g,'b',ctx) as any).foundCount===0,'other player progress stays private');
+  if(!own.solved){
+   check(!!MODULES[g.kind].action(g,'a',{type:'spot',side:1-side,...hit},ctx),'same difference on opposite picture rejected');
+   check(d.boards.a.found.length===i+1&&d.boards.a.errors===0&&g.points.a===0,'repeat cannot farm progress or incur error penalty');
+  }
+ }
+ check(g.points.a===100,'complete puzzle scores once');
+ MODULES[g.kind].advance(g,{...ctx,now:g.deadline!});
+ const reveal=MODULES[g.kind].snapshot(g,'a',ctx) as any;
+ check(reveal.targets.length===annotation.targets.length&&!JSON.stringify(reveal).includes('"mask"'),'reveal contains every precise outline but no hit mask');
 }
+const partial=state('gender-difference'),pd=partial.data as any;pd.pair=1;
+for(const id of ctx.online)MODULES[partial.kind].action(partial,id,{type:'assets-ready'},ctx);
+MODULES[partial.kind].action(partial,'a',{type:'spot',side:0,...targetHit(hotspotData[1],hotspotData[1].targets[0])},ctx);
+MODULES[partial.kind].advance(partial,{...ctx,now:partial.deadline!});
+check(partial.points.a===0&&!(MODULES[partial.kind].snapshot(partial,'a',ctx) as any).solved,'partial puzzle timeout gives zero points');
+const precise=state('gender-difference'),preciseData=precise.data as any;preciseData.pair=5;
+for(const id of ctx.online)MODULES[precise.kind].action(precise,id,{type:'assets-ready'},ctx);
+MODULES[precise.kind].action(precise,'a',{type:'spot',side:0,x:.48,y:.55},ctx);
+check(preciseData.boards.a.errors===1&&preciseData.boards.a.found.length===0,'Pikachu body outside actual tail-tip difference is rejected');
 const timedBomb=state('type-bomb'),timedBombData=timedBomb.data as any;
 MODULES[timedBomb.kind].advance(timedBomb,{...ctx,now:timedBomb.deadline!});
 check(timedBombData.hearts.a===0&&timedBomb.phase==='roundResult','120-second bomb timeout removes both hearts');

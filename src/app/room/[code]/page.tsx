@@ -15,6 +15,9 @@ export default function RoomPage({ params }: { params: { code: string } }) {
   const { view, status, error, notice, actions } = useRoom(code);
   const router = useRouter();
   const [nick, setNick] = useState('');
+  const [editingName,setEditingName]=useState(false),[nameDraft,setNameDraft]=useState(''),[nameError,setNameError]=useState<string|null>(null),[savingName,setSavingName]=useState(false);
+  const me=view?.players.find(p=>p.id===view.youId);
+  const saveName=async()=>{setSavingName(true);setNameError(null);const error=await actions.renamePlayer(nameDraft.trim());setSavingName(false);if(error)setNameError(error);else setEditingName(false);};
   useEffect(()=>{window.scrollTo({top:0,behavior:'instant' as ScrollBehavior});},[view?.status]);
 
   const goHome = () => {
@@ -28,9 +31,11 @@ export default function RoomPage({ params }: { params: { code: string } }) {
         <button className="btn btn-sm" onClick={goHome}>
           ← 首页
         </button>
-        <span className="pill">房间 {code}</span>
+        <span className="room-brand">POKÉMON PARTY TONIGHT</span>
+        <div className="room-head-tools">{me&&<button className="btn btn-sm nickname-button" onClick={()=>{setNameDraft(me.nickname);setNameError(null);setEditingName(v=>!v);}} aria-expanded={editingName} aria-controls="nickname-editor"><span>{me.nickname}</span><small>改名</small></button>}<span className="pill">房间 {code}</span></div>
       </div>
 
+      {editingName&&me&&<form id="nickname-editor" className="card nickname-editor" onSubmit={e=>{e.preventDefault();void saveName();}}><label htmlFor="room-nickname">修改你的昵称</label><div className="row mt"><input id="room-nickname" className="input" value={nameDraft} onChange={e=>setNameDraft(e.target.value)} maxLength={16} autoFocus disabled={savingName}/><button className="btn btn-primary" disabled={savingName||!nameDraft.trim()}>{savingName?'保存中…':'保存'}</button><button className="btn" type="button" disabled={savingName} onClick={()=>setEditingName(false)}>取消</button></div>{nameError&&<p role="alert">{nameError}</p>}<p className="muted">名字会同步给房间内所有人，积分与游戏身份保留。</p></form>}
       {view && view.settings.targetScore > 0 && <div className="card center"><span className="pill">🏆 房间目标 {view.settings.targetScore} 分</span><p className="muted">{Math.max(0, ...Object.values(view.scores)) >= view.settings.targetScore ? `目标已达成！${view.players.filter(p => (view.scores[p.id] ?? 0) >= view.settings.targetScore).map(p => p.nickname).join('、')} 达到目标，下一场重新计分。` : `当前最高 ${Math.max(0, ...Object.values(view.scores))} 分，跨游戏累计。`}</p></div>}
 
       {status === 'need-nickname' && (
