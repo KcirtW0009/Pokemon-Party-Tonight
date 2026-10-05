@@ -51,3 +51,9 @@ sudo systemctl restart pokemon-party-tonight
 ## Playtest revision release (2026-10-04)
 
 Active runtime release: /home/ubuntu/ppt-release-854c9cb. Previous /home/ubuntu/ppt-release-3a8b2d6 remains available for rollback. Build, data/hotspot checks, logic checks and 102 ordinary-timing public checks passed. The stable symlink and systemd port3100 remain unchanged. Full revised rules: PLAYTEST_REVISION.md.
+
+## UI and sound release — 2026-10-05
+
+Active runtime: `/home/ubuntu/ppt-release-7771a14`; previous `/home/ubuntu/ppt-release-1ac88ae` is retained for rollback. The systemd service is active on port 3100.
+
+Production build, data validation, 64 audio checks and all logic suites passed on the server. Public ordinary-timing multiplayer checks passed (102), as did public rename checks (14). Browser verification confirmed music/effects enable independently, HTTP copying returns success feedback, and the page has no console errors. Public homepage screenshot: `qa/public-home-upgrade.png`.

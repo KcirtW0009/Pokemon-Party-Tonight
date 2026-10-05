@@ -123,3 +123,6 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 - Added an original synthesized background loop and game-specific short feedback across 16 games. Global header controls expose independent music/effects toggles and volumes. First use is silent; music starts only after a player gesture, continues across internal navigation and pauses when hidden.
 - No server/game rules changed in this presentation follow-up. Audio observes only existing player-visible snapshots, never sends actions or exposes hidden state; reconnect and duplicate snapshots do not replay cues.
 - Audio lifecycle/event regression: 64 checks passed. Type checking and existing logic checks pass. Full design and event mapping: AUDIO_DESIGN.md. Browser and final rollout checks follow.
+
+- Final runtime 7771a14 is deployed to the public port-3100 service; previous 1ac88ae remains available for rollback. Server production build, 64 audio checks and all rule regressions passed.
+- Public multiplayer: 102 ordinary-timing checks passed; nickname regression: 14 passed. Public browser verified both sound toggles, successful HTTP copy feedback and no console errors. Local game presentation, navigation audio continuity and 320px responsive checks passed. Screenshots: qa/public-home-upgrade.png and qa/battle-ui-audio.png.
