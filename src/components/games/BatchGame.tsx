@@ -10,6 +10,8 @@ import {PokemonSelector} from '../PokemonSelector';
 import type {Pawn,Point,Wall} from '@/lib/quoridor';
 import {wallError} from '@/lib/quoridor';
 import type {DriveMap,Vector,DriveInput} from '@/lib/driving';
+import {RocketMatchReview} from './RocketReview';
+import type {RocketReport} from '@/lib/rocketReport';
 import {ThirdGames} from './ThirdGames';
 import {BerryTable} from './BerryTable';
 import {GenderCompare} from './GenderCompare';
@@ -36,6 +38,7 @@ export function BatchGame({view,game:g,actions}:Props){
  {g.game==='sudowoodo-quoridor'&&<Quoridor view={view} g={g} send={send} enabled={turn&&!busy}/>}
  {g.game==='drive-revavroom'&&<Drive view={view} g={g} send={send} enabled={mine&&!g.paused}/>}
  </div>}
+ {final&&g.game==='rocket-secret'&&<RocketMatchReview view={view} reports={(g.data.reports as RocketReport[])??[]}/>}
  {error&&<div className="card" role="alert">{error}</div>}
  <div className="card game-score"><h3>{final?'本场结算':'本场成绩'}{g.game==='drive-revavroom'?'（合作不计分）':''}</h3>{g.participants.slice().sort((a,b)=>g.points[b]-g.points[a]).map(id=><div key={id} className={`score-line${id===view.youId?' is-mine':''}`}><span>{final&&g.ranks?`第 ${g.ranks[id]} 名 · `:''}{name(view,id)}{id===view.youId?'（你）':''}</span><strong>{g.points[id]}{final&&g.gains?` · 房间 +${g.gains[id]}`:''}</strong></div>)}{!final&&g.game!=='drive-revavroom'&&<p className="muted">整场结束后按累计成绩排名：冠军 100、亚军 50、季军 25；并列采用同名次。</p>}{final&&g.game==='drive-revavroom'&&<DriveResults g={g}/>}</div>
  {view.hostId===view.youId&&<div className="card">{!final&&g.game==='sudowoodo-quoridor'&&<button className="btn" onClick={()=>send({type:'end-match'})}>结束整场（当前局不计分）</button>}<button className="btn btn-block" onClick={actions.backToLobby}>{final?'返回大厅 / 再玩一场':'结束游戏并返回大厅'}</button></div>}</div>;

@@ -137,3 +137,9 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 
 - Public release 3a8eed4 is active on port3100, previous 7771a14 retained. Remote build, full rules and audio checks passed. Public ordinary-timing suite passed 106 checks. Public dice passed 103 checks with 4 successful/3 failed challenges, correct losses on all seats, idempotent retry and fresh-envelope/old-call rejection without damage. Timing QA now reads first observed stage duration rather than time remaining after image downloads.
 - Added 200 combined-information auction scenarios: lower bounds never exceed actual box values and opponents receive only public-information bounds. Latest local targeted suite: 6,927 checks. Extra test/doc changes do not change deployed application code.
+
+
+## 2026-10-06 — Rocket review and shareable reports
+- Archive each completed question's clues, guesses by attempt, answer and gains; snapshots reveal other guesses only after judging, preserve all questions for final review, and do not repeat old archives during active play.
+- Each clue gains a default-collapsed all-player review, with correct-position counts and missing submissions. Removed the always-visible final guess list. Per-question and whole-match text reports include chronological clues/choices/roles/answers/gains; copy uses existing HTTP-compatible helper with feedback/manual text fallback.
+- Added 27 report/privacy/archive/render checks. Full rule suites, typecheck and local production build passed. Real browser verified initially collapsed guesses, wrong-to-correct progression, question report copy, final three-question archives and whole-match copy. Screenshots: qa/rocket-review.png, qa/rocket-match-report.png.

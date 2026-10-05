@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit",
     "build:data": "node scripts/build-pokemon.mjs && node scripts/build-clue-tags.mjs",
     "build:clue-tags": "node scripts/build-clue-tags.mjs",
-    "test:logic": "tsx scripts/logic-test.ts && tsx scripts/revision-test.ts && tsx scripts/view-test.ts && tsx scripts/batch-test.ts && tsx scripts/third-test.ts && tsx scripts/oct6-test.ts",
+    "test:logic": "tsx scripts/logic-test.ts && tsx scripts/revision-test.ts && tsx scripts/view-test.ts && tsx scripts/batch-test.ts && tsx scripts/third-test.ts && tsx scripts/oct6-test.ts && tsx scripts/rocket-review-test.ts",
     "test:third": "node scripts/third-multiplayer.mjs",
     "test:auction": "tsx scripts/auction-simulation.ts",
     "test:batch": "node scripts/batch-multiplayer.mjs",
