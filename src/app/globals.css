@@ -8,7 +8,7 @@
   --yellow: #efd48b;
   --red: #b75449;
   --blue: #4c7188;
-  --green: #4e8463;
+  --green: #3f7453;
   --purple: #897899;
   --radius: 16px;
   --shadow: 0 3px 16px #28352f06;
@@ -602,3 +602,8 @@ html { scroll-padding-top: 86px; }
 
 .room-head .btn-sm,.room-head-tools .pill { white-space: nowrap; }
 @media(max-width:600px) { .invite-copy .btn { white-space: nowrap; padding-inline: 10px; font-size: 13px; } }
+
+.btn-blue:hover:not(:disabled) { background: var(--blue); }
+.btn-green:hover:not(:disabled) { background: var(--green); }
+.btn-danger:hover:not(:disabled) { background: var(--red); }
+.game-opt.sel:hover:not(:disabled) { background: #efe4c5; border-color: #c0a466; }
