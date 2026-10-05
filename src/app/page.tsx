@@ -2,6 +2,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createRoom, lsNickname } from '@/lib/useRoom';
+import {PartyMusicControl} from '@/components/PartyMusic';
 
 export default function Home() {
   const router = useRouter();
@@ -37,7 +38,7 @@ export default function Home() {
 
   return (
     <main className="page home-page">
-      <header className="home-nav"><div className="brand-lockup"><span className="brand-ball" aria-hidden="true"/>PARTY TONIGHT</div><span className="muted">宝可梦同好们的游戏桌</span></header>
+      <header className="home-nav"><div className="brand-lockup"><span className="brand-ball" aria-hidden="true"/>PARTY TONIGHT</div><div className="home-nav-right"><span className="muted">宝可梦同好们的游戏桌</span><PartyMusicControl/></div></header>
       <div className="home-layout">
         <section className="home-hero">
           <p className="home-eyebrow">POKÉMON PARTY TONIGHT</p>

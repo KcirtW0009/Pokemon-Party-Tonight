@@ -116,3 +116,10 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 - Refined shared palette, borders and button hierarchy; homepage removes the game list and keeps nickname/create/join in one entry card. Desktop and mobile lobby actions are fixed at the bottom with measured content padding; home navigation remains sticky.
 - Added own-seat rename with unique-name validation and full-room broadcast. Rejoining with a private session token now updates the nickname without replacing the seat. Live 14-check regression covers rename, invalid/duplicate names, outsiders, token seat theft protection, rejoining and ongoing-game identity.
 - Browser QA confirmed desktop home and 390px mobile home show all entry controls, and room rename updates header/roster. Screenshot: qa/home-upgrade.png, qa/lobby-upgrade.png.
+
+
+## 2026-10-05 — game presentation and optional sound
+- Extended the shared game hierarchy: compact timers, turn status, scores, precise selection styling and collapsible rules. Match candidates use a desktop 5×2 grid; battle play confirmation remains at the bottom on desktop and mobile.
+- Added an original synthesized background loop and game-specific short feedback across 16 games. Global header controls expose independent music/effects toggles and volumes. First use is silent; music starts only after a player gesture, continues across internal navigation and pauses when hidden.
+- No server/game rules changed in this presentation follow-up. Audio observes only existing player-visible snapshots, never sends actions or exposes hidden state; reconnect and duplicate snapshots do not replay cues.
+- Audio lifecycle/event regression: 64 checks passed. Type checking and existing logic checks pass. Full design and event mapping: AUDIO_DESIGN.md. Browser and final rollout checks follow.

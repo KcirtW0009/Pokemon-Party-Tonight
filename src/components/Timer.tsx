@@ -26,13 +26,11 @@ export function Countdown({ endsAt, totalMs }: { endsAt: number | null; totalMs?
   const left = Math.max(0, Math.ceil((endsAt - now) / 1000));
   const frac = totalMs ? Math.max(0, Math.min(1, (endsAt - now) / totalMs)) : 1;
   return (
-    <div>
-      <div className="center" style={{ fontWeight: 900, fontSize: 22 }}>
-        ⏱ {left}s
-      </div>
-      <div className="timerbar mt">
+    <div className={`countdown${left<=10?' countdown-urgent':''}`} role="timer" aria-label={`剩余 ${left} 秒`}>
+      <div className="countdown-number"><span className="countdown-caption">剩余时间</span><strong>{left}</strong><span>秒</span></div>
+      {totalMs&&<div className="timerbar mt">
         <div style={{ width: `${frac * 100}%` }} />
-      </div>
+      </div>}
     </div>
   );
 }

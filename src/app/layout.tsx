@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import './batch.css';
+import {PartyMusicProvider} from '@/components/PartyMusic';
 
 export const metadata: Metadata = {
   title: '宝可梦派对 · Pokémon Party Tonight',
@@ -17,7 +18,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body><PartyMusicProvider>{children}</PartyMusicProvider></body>
     </html>
   );
 }

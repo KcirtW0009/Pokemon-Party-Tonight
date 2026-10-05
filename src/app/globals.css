@@ -147,7 +147,6 @@ h3 {
 }
 @media (max-width: 560px) {
   .battle-hand-card { padding-bottom: 90px; }
-  .battle-play { position: fixed; left: 20px; bottom: max(16px, env(safe-area-inset-bottom)); width: calc(100% - 44px); z-index: 15; }
   .grid2 {
     grid-template-columns: 1fr;
   }
@@ -607,3 +606,59 @@ html { scroll-padding-top: 86px; }
 .btn-green:hover:not(:disabled) { background: var(--green); }
 .btn-danger:hover:not(:disabled) { background: var(--red); }
 .game-opt.sel:hover:not(:disabled) { background: #efe4c5; border-color: #c0a466; }
+
+/* Shared in-game hierarchy: table, timing, selection, results. */
+.game-page > .card,.game-page > div > .card { padding: 22px; }
+.game-page h2 { font-size: 20px; line-height: 1.45; }
+.game-overview { border-top: 3px solid #bca674; }
+.turn-status { display: inline-flex; padding: 6px 12px; border-radius: 8px; background: #f0f2eb; font-weight: 600; }
+.turn-status.is-mine { background: #e4f0e7; color: #2d6847; }
+.countdown { max-width: 560px; margin: 14px auto 18px; }
+.countdown-number { display: flex; justify-content: center; align-items: baseline; gap: 6px; font-size: 12px; color: var(--ink-soft); }
+.countdown-number strong { font-size: 30px; line-height: 1.2; font-variant-numeric: tabular-nums; font-weight: 650; color: var(--ink); }
+.countdown-caption { margin-right: 6px; }
+.countdown .timerbar { height: 5px; border: none; background: #e8ece3; margin-top: 10px; }
+.countdown-urgent strong { color: #a34738; }
+.countdown-urgent .timerbar > div { background: #b45e4b; }
+.game-rules summary { cursor: pointer; font-size: 14px; font-weight: 600; }
+.game-rules ul { color: var(--ink-soft); padding-top: 14px; }
+.game-score h3,.final-ranking h2 { padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.score-line { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 10px; border-bottom: 1px solid #edf0e8; font-size: 14px; }
+.score-line span { min-width: 0; overflow-wrap: anywhere; }
+.score-line strong { flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.score-line.is-mine { background: #f4f7ef; border-radius: 8px; }
+.game-page .candidate-grid .game-opt { text-align: center; padding: 10px 6px; }
+.game-page .candidate-grid .game-opt img { max-width: 100%; height: auto; object-fit: contain; }
+.game-page .pkm { background: #fafbf7; padding: 14px 10px; }
+.game-page .pkm.picked { background: #f7eed2; border-color: #ad9254; box-shadow: inset 0 0 0 1px #ad9254; }
+.game-page .third-result { border-color: #dde3d6; background: #f4f7ef; padding: 16px; }
+.game-page .word-row { border-bottom-color: #e5e9df; padding: 14px 0; }
+.game-page .vote-grid .game-opt { min-height: 64px; text-align: center; }
+.home-nav-right { display: flex; align-items: center; gap: 20px; }
+.music-control { position: relative; flex-shrink: 0; }
+.music-button { min-width: 42px; }
+.music-button > span:first-child { font-size: 22px; line-height: 1; }
+.music-on { color: #356647; background: #e7f0e6; }
+.music-panel { position: fixed; top: 76px; right: max(12px,calc((100vw - 936px)/2)); width: min(320px,calc(100vw - 24px)); padding: 18px; background: #fff; border: 1px solid #d2dacb; border-radius: 14px; box-shadow: 0 14px 48px #28352f22; z-index: 60; }
+.music-panel p { font-size: 12px; }
+.music-volume { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; margin-top: 16px; }
+.music-volume span { margin-left: auto; }
+.music-volume input { width: 100%; accent-color: #58794e; }
+@media(max-width:600px) {
+ .game-page > .card,.game-page > div > .card { padding: 16px; }
+ .music-label,.home-nav-right > .muted { display: none; }
+ .room-head-tools { flex: 1; }
+ .room-head-tools .nickname-button { flex: 1; padding-inline: 6px; }
+ .music-button { padding-inline: 10px !important; min-width: 36px; }
+ .music-panel { max-height: calc(100dvh - 92px); overflow-y: auto; }
+ .game-page .candidate-grid .game-opt { font-size: 13px; }
+ .game-page .pkm { padding: 10px 6px; }
+ .game-page .battle-hand-card { padding-bottom: 96px; }
+}
+
+.room-head,.home-nav { z-index: 50; }
+
+.match-candidates { grid-template-columns: repeat(5,minmax(0,1fr)); }
+.battle-action-dock { position: fixed; bottom: max(12px,env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: min(936px,calc(100% - 24px)); z-index: 35; padding: 12px; border: 1px solid #ced5ca; border-radius: 14px; background: #fffffff5; box-shadow: 0 8px 32px #28352f18; }
+.game-page .battle-hand-card { padding-bottom: 110px; }
+@media(max-width:600px) { .match-candidates { grid-template-columns: repeat(2,minmax(0,1fr)); } }

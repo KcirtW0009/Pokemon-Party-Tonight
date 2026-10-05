@@ -14,7 +14,7 @@ interface Props {
 export function FinalRanking({ players, scores, title = '🏆 最终排名', gains }: Props) {
   const order = [...players].sort((a, b) => (scores[b.id] ?? 0) - (scores[a.id] ?? 0));
   return (
-    <div className="card">
+    <div className="card final-ranking">
       <h2>{title}</h2>
       {order.map((p, i) => (
         <div key={p.id} className={`rank-row${i === 0 ? ' first' : ''}`}>
@@ -33,15 +33,13 @@ export function FinalRanking({ players, scores, title = '🏆 最终排名', gai
 
 export function GameRules({ icon, name, lines }: { icon: string; name: string; lines: string[] }) {
   return (
-    <div className="card">
-      <h3>
-        {icon} {name} · 玩法
-      </h3>
+    <details className="card game-rules">
+      <summary>{icon} {name} · 玩法说明</summary>
       <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, lineHeight: 1.7 }}>
         {lines.map((l, i) => (
           <li key={i}>{l}</li>
         ))}
       </ul>
-    </div>
+    </details>
   );
 }

@@ -62,7 +62,7 @@ export function MatchGame({ view, game, actions }: { view: RoomView; game: Match
           )}
             <div className="mt">
               <p className="muted center">从共同的 10 只候选中选择，猜你和朋友最有默契的一只。</p>
-              <div className="candidate-grid">
+              <div className="candidate-grid match-candidates">
                 {game.candidateIds.map(id => {
                   const p = getPokemon(id);
                   return p && <button className={`game-opt${game.myPick === id ? ' sel' : ''}`} aria-pressed={game.myPick === id} disabled={game.myPick !== null || game.phase !== 'pick'} key={`${game.round}-${id}`} onClick={() => submit(p)}><img src={p.image} alt="" width={88} height={88} /><div>{p.nameZh}</div>{game.myPick === id && <span className="pill">✓ 已选择</span>}</button>;

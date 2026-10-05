@@ -82,9 +82,9 @@ export function BattleGame({ view, game, actions }: { view: RoomView; game: Batt
                 })}
               </div>
               {game.myUsed.length > 0 && <details className="mt"><summary>已使用的手牌（{game.myUsed.length}）</summary><div className="hand-grid mt">{game.myUsed.map(id => { const p = getPokemon(id); return p ? <PokemonCard key={id} pokemon={p} used sub="已使用" /> : null; })}</div></details>}
-              <button className="btn btn-danger btn-block mt battle-play" disabled={!selected || !game.myHand.includes(selected)} onClick={play}>
+              <div className="battle-action-dock"><button className="btn btn-primary btn-block battle-play" disabled={!selected || !game.myHand.includes(selected)} onClick={play}>
                 ⚔️ 出牌{selected ? `：${getPokemon(selected)?.nameZh}` : ''}
-              </button>
+              </button></div>
               {err && <p className="center" style={{ color: 'var(--red)' }}>⚠️ {err}</p>}
             </>
           )}

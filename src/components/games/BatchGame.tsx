@@ -13,7 +13,7 @@ import type {DriveMap,Vector,DriveInput} from '@/lib/driving';
 import {ThirdGames} from './ThirdGames';
 import {BerryTable} from './BerryTable';
 import {GenderCompare} from './GenderCompare';
-import {SoundButton,Blast,usePartySound} from './PartyEffects';
+import {Blast,usePartySound} from './PartyEffects';
 import {playPartySound} from '@/lib/partyAudio';
 import {THIRD_GAMES} from '@/lib/secondTypes';
 type Send=(a:Record<string,unknown>)=>Promise<void>;
@@ -25,7 +25,7 @@ export function BatchGame({view,game:g,actions}:Props){
  const [error,setError]=useState<string|null>(null),[busy,setBusy]=useState(false);const mine=g.participants.includes(view.youId),turn=mine&&g.currentPlayerId===view.youId&&g.phase==='turn'&&!g.paused;
  const send:Send=async a=>{setBusy(true);const e=await actions.gameAction(a);setError(e);setBusy(false);};
  const final=g.phase==='final';
- return <div className="batch-layout"><div className="card"><div className="row" style={{justifyContent:'space-between'}}><h2>{GAME_META[g.game].icon} {GAME_META[g.game].name}</h2><span className="pill">{g.round}/{g.totalRounds}</span></div><p className="muted">{GAME_META[g.game].desc}</p>{!mine&&<p className="pill">正在旁观，下一场可以参加</p>}{g.paused?<p role="status">连接人数不足，等待重连（最多 30 秒）</p>:g.currentPlayerId&&!final&&<p className="center">{turn?'轮到你了':`${name(view,g.currentPlayerId)} 的回合`}</p>}{g.endsAt&&!g.paused&&<Countdown endsAt={g.endsAt}/>} {g.notice&&<p>{g.notice}</p>}<SoundButton/></div>
+ return <div className="batch-layout"><div className="card game-overview"><div className="row" style={{justifyContent:'space-between'}}><h2>{GAME_META[g.game].icon} {GAME_META[g.game].name}</h2><span className="pill">{g.round}/{g.totalRounds}</span></div><p className="muted">{GAME_META[g.game].desc}</p>{!mine&&<p className="pill">正在旁观，下一场可以参加</p>}{g.paused?<p role="status">连接人数不足，等待重连（最多 30 秒）</p>:g.currentPlayerId&&!final&&<p className={`turn-status${turn?' is-mine':''}`}>{turn?'轮到你了':`${name(view,g.currentPlayerId)} 的回合`}</p>}{g.endsAt&&!g.paused&&<Countdown endsAt={g.endsAt} totalMs={['turn','question','intel','bid'].includes(g.phase)?120000:undefined}/>} {g.notice&&<p>{g.notice}</p>}</div>
  {!final&&<div className="card">
  {THIRD_GAMES.includes(g.game as typeof THIRD_GAMES[number])&&<ThirdGames view={view} g={g} send={send} busy={busy}/>}
  {g.game==='type-bomb'&&<Bomb view={view} g={g} send={send} enabled={turn&&!busy}/>}
@@ -37,7 +37,7 @@ export function BatchGame({view,game:g,actions}:Props){
  {g.game==='drive-revavroom'&&<Drive view={view} g={g} send={send} enabled={mine&&!g.paused}/>}
  </div>}
  {error&&<div className="card" role="alert">{error}</div>}
- <div className="card"><h3>{final?'本场结算':'本场成绩'}{g.game==='drive-revavroom'?'（合作不计分）':''}</h3>{g.participants.slice().sort((a,b)=>g.points[b]-g.points[a]).map(id=><div key={id} className="row" style={{justifyContent:'space-between',padding:'8px 0'}}><span>{final&&g.ranks?`第 ${g.ranks[id]} 名 · `:''}{name(view,id)}{id===view.youId?'（你）':''}</span><strong>{g.points[id]}{final&&g.gains?` · 房间 +${g.gains[id]}`:''}</strong></div>)}{!final&&g.game!=='drive-revavroom'&&<p className="muted">整场结束后按累计成绩排名：冠军 100、亚军 50、季军 25；并列采用同名次。</p>}{final&&g.game==='drive-revavroom'&&<DriveResults g={g}/>}</div>
+ <div className="card game-score"><h3>{final?'本场结算':'本场成绩'}{g.game==='drive-revavroom'?'（合作不计分）':''}</h3>{g.participants.slice().sort((a,b)=>g.points[b]-g.points[a]).map(id=><div key={id} className={`score-line${id===view.youId?' is-mine':''}`}><span>{final&&g.ranks?`第 ${g.ranks[id]} 名 · `:''}{name(view,id)}{id===view.youId?'（你）':''}</span><strong>{g.points[id]}{final&&g.gains?` · 房间 +${g.gains[id]}`:''}</strong></div>)}{!final&&g.game!=='drive-revavroom'&&<p className="muted">整场结束后按累计成绩排名：冠军 100、亚军 50、季军 25；并列采用同名次。</p>}{final&&g.game==='drive-revavroom'&&<DriveResults g={g}/>}</div>
  {view.hostId===view.youId&&<div className="card">{!final&&g.game==='sudowoodo-quoridor'&&<button className="btn" onClick={()=>send({type:'end-match'})}>结束整场（当前局不计分）</button>}<button className="btn btn-block" onClick={actions.backToLobby}>{final?'返回大厅 / 再玩一场':'结束游戏并返回大厅'}</button></div>}</div>;
 }
 function Bomb({view,g,send,enabled}:{view:RoomView;g:BatchView;send:Send;enabled:boolean}){
