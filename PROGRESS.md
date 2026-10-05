@@ -126,3 +126,11 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 
 - Final runtime 7771a14 is deployed to the public port-3100 service; previous 1ac88ae remains available for rollback. Server production build, 64 audio checks and all rule regressions passed.
 - Public multiplayer: 102 ordinary-timing checks passed; nickname regression: 14 passed. Public browser verified both sound toggles, successful HTTP copy feedback and no console errors. Local game presentation, navigation audio continuity and 320px responsive checks passed. Screenshots: qa/public-home-upgrade.png and qa/battle-ui-audio.png.
+
+
+## 2026-10-06 — second playtest feedback
+- Auction separates purchases from use/bids, publishes scoped tool use and completed round prices, adds five card tiers/three tools and a conservative disclosed-information value floor.
+- Adventure uses 42 cards, temporary passes, consecutive-pass settlement and ordered forced-effect queues; Delibird includes stopped players, Liepard discards opponents' numbers, Annihilape grants 4 then 7 with normal duplicate consequences.
+- Meloetta proactively breaks only adjacent obstacles when this shortens escape, resets form and re-arms later transformations; preview and server share the algorithm.
+- Dice randomizes match opener, binds a challenge to the displayed hand/call, snapshots results immutably and keeps a public before/after-life ledger. Original reversed-life report has not been reproduced; old unbound action/latest transport metadata race is now explicitly rejected. Do not claim the reported incident's root cause was confirmed.
+- Local production build, rule regressions and audio tests passed; 3,327 targeted checks include every dice face/equality/seat, stale challenge rejection, all card price ranges, seven tools/privacy, forced special chains, temporary passes and repeat dance eligibility. Live dice test passed 89 checks (4 successful, 3 failed challenges); third-game multiplayer passed 390 checks. Browser verified independent purchase/use, tier selection, shared usage versus private results, price floor and no console errors. Screenshot: qa/oct6-auction.png.

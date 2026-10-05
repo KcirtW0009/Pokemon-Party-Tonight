@@ -32,9 +32,10 @@ try{
  const cs=clients.slice(0,3);for(const c of clients)c.emit('leave-room');await wait(150);
  for(const [i,c] of cs.entries()){const r=await ack(c,i?'join-room':'create-room',{code:cs[0].code,nickname:'拍卖新版'+i});check(r.ok,'auction join');c.code=r.code??cs[0].code;}
  h.emit('select-game',{game:'pokemon-auction'});h.emit('update-settings',{second:{auctionBoxes:1}});cs.slice(1).forEach(c=>c.emit('toggle-ready'));await until(()=>h.view.selectedGame==='pokemon-auction'&&h.view.players.every(p=>p.id===h.view.hostId||p.ready),'auction ready');check((await ack(h,'start-game')).ok,'auction start');await until(()=>cs.every(c=>c.view.game?.game==='pokemon-auction'),'auction views');
+ await until(()=>cs.every(c=>c.view.game.phase==='purchase'),'separate purchase');timer(h);check((await action(h,{type:'buy-tool',tool:'scan'})).ok,'purchase backpack');await until(()=>h.view.game.data.myInventory.length===1,'bag');for(const c of cs)check((await action(c,{type:'ready'})).ok,'purchase complete');
  for(let round=1;round<=3;round++){
   await until(()=>cs.every(c=>c.view.game.phase==='intel'&&c.view.game.data.bidRound===round),'intel round');timer(h);check(h.view.game.data.publicInfo.length===(round===3?2:1),'hints appear only rounds one and three');check(cs.every(c=>JSON.stringify(c.view.game.data.publicInfo)===JSON.stringify(h.view.game.data.publicInfo)),'identical public intelligence');
-  if(round===1){check((await action(h,{type:'buy-tool',tool:'scan'})).ok,'purchase backpack');await until(()=>h.view.game.data.myInventory.length===1,'bag');const itemId=h.view.game.data.myInventory[0].id;check((await action(h,{type:'use-tool',itemId,index:0})).ok,'scope at use');check(!(await action(h,{type:'use-tool',itemId,index:1})).ok,'one use limit');}
+  if(round===1){const itemId=h.view.game.data.myInventory[0].id;check((await action(h,{type:'use-tool',itemId,index:0})).ok,'scope at use');check(!(await action(h,{type:'use-tool',itemId,index:1})).ok,'one use limit');}
   for(const c of cs)check((await action(c,{type:'ready'})).ok,'intel ready');await until(()=>cs.every(c=>c.view.game.phase==='bid'),'simultaneous bid phase');timer(h);
   check(!(await action(h,{type:'buy-tool',tool:'wide'})).ok,'bid purchase prohibited');for(const c of cs)check((await action(c,{type:'bid',amount:1})).ok,'sealed bid');
  }

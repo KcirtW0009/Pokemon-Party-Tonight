@@ -55,7 +55,7 @@ export const GAME_META: Record<
   'pokemon-auction':{name:'宝可梦卡牌拍卖',icon:'🔨',minPlayers:2,maxPlayers:6,desc:'购买私人情报、秘密报价，竞拍盲盒后自动出售卡牌。试玩参数待平衡验证。'},
   'pokemon-liars-dice':{name:'宝可梦大话骰',icon:'🎲',minPlayers:3,maxPlayers:8,desc:'私人骰子、公开叫数；百变怪万能，三命淘汰赛。'},
   'surround-meloetta':{name:'圈住美洛耶塔',icon:'🎵',minPlayers:2,maxPlayers:8,desc:'轮流放置障碍围住美洛耶塔；舞步形态可破障一次。'},
-  'pokemon-push-your-luck':{name:'宝可梦探险：贪心抽卡',icon:'🧭',minPlayers:2,maxPlayers:8,desc:'继续抽牌或停手存分，重复数字会爆点，特殊卡改变局势。'},
+  'pokemon-push-your-luck':{name:'宝可梦探险：贪心抽卡',icon:'🧭',minPlayers:2,maxPlayers:8,desc:'继续抽牌或暂时停手，下次可返场；重复数字爆点，六种道具改变局势。'},
   'type-bomb': {name:'属性炸弹',icon:'💣',minPlayers:2,maxPlayers:8,desc:'轮流猜属性，用公开伤害推理；每轮剩余生命累计排名。'},
   'starter-memory': {name:'记忆大师',icon:'🃏',minPlayers:2,maxPlayers:8,desc:'轮流翻两张牌，找出成对的御三家。'},
   'snorlax-berries': {name:'卡比兽的树果',icon:'🍒',minPlayers:2,maxPlayers:8,desc:'抽取树果得分，也可以请信使补货；当心炸弹。'},
