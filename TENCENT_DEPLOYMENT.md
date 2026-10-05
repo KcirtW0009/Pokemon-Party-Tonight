@@ -61,3 +61,6 @@ Production build, data validation, 64 audio checks and all logic suites passed o
 
 ## Playtest follow-up — 2026-10-06
 Active runtime: `/home/ubuntu/ppt-release-3a8eed4`; previous `/home/ubuntu/ppt-release-7771a14` is preserved. Service active, HTTP200, port3100. Server build and all rule/audio regressions passed before switch. Public ordinary-timing suite passed106 checks; public dice专项 passed103 checks (4 successful/3 failed challenges, correct life losses, retry idempotency and stale displayed-call rejection). Revised rules: THIRD_GAMES.md. Original reversed-life incident not reproduced; challenge binding protects a discovered stale-view/latest-envelope race without claiming the original cause confirmed.
+
+## Rocket reports release — 2026-10-06
+Active runtime `/home/ubuntu/ppt-release-f1699b6`, prior `/home/ubuntu/ppt-release-3a8eed4` retained. Production build, full rules and 64 audio checks passed remotely. Report suite:27 checks covering reveal privacy, missing submissions, multi-question retention, immutable snapshots, text contents and default collapsed rendering. Public three Socket.IO clients completed three questions/two attempts each; browser verified final report archives and HTTP copying success.
