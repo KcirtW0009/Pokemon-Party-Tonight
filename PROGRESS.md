@@ -182,3 +182,4 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 - First opening seat is randomized once per match, then rotates each round without rerolling; existing three-player position rotation remains unchanged.
 - Typecheck and batch suite (70,666 checks) passed, plus 29 deterministic opening-seat/rotation checks for 2/3/4 players. Updated timeout assertions to follow the randomized opening player.
 - Local only at user request: not uploaded, pushed or deployed. Production remains 15e68fe.
+- User subsequently authorized deployment: runtime 3633bfa is active on Tencent port3100, prior 15e68fe retained for rollback. Remote batch/opening-seat tests, production build/data checks and room/normal-timing smoke passed. Public homepage and Sudowoodo artwork returned HTTP200.

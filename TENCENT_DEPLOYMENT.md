@@ -77,3 +77,6 @@ Active runtime /home/ubuntu/ppt-release-27f3acc; previous /home/ubuntu/ppt-relea
 
 ## Battle score / artwork release — 2026-10-07
 Active runtime `/home/ubuntu/ppt-release-15e68fe`; previous `/home/ubuntu/ppt-release-27f3acc` retained for rollback. Correct Thievul sprite and persistent in-game battle scores, no rule changes. Production build/data validation and room/normal-timing checks passed; systemd active on3100, public homepage and828 artwork HTTP200.
+
+## Sudowoodo board release — 2026-10-07
+Active runtime `/home/ubuntu/ppt-release-3633bfa`; previous `/home/ubuntu/ppt-release-15e68fe` retained. Pokemon pawns/Sudowoodo barriers and random first opener with subsequent rotation. Remote batch suite and opening-seat checks, production build/data validation and room/normal-timing smoke passed. Systemd active on3100; public homepage/artwork HTTP200.
