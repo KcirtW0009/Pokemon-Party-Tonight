@@ -176,3 +176,9 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 - Battle now displays every player's current room score during picking, countdown and reveal, sorted by score and marking the current player. Scoring rules unchanged.
 - Local typecheck passed. Deployment authorized by the user after gameplay ended; release 15e68fe prepared separately from the active release.
 - Deployed runtime 15e68fe on Tencent port3100; previous 27f3acc retained. Remote production build/data validation and room/normal-timing checks passed. Service active; public homepage and Thievul artwork returned HTTP200.
+
+## 2026-10-07 — Local pending: Sudowoodo board identity and opening seat
+- Board pawns now use Bulbasaur/Charmander/Squirtle/Pikachu artwork with player-colored bases and matching player legends. Placed barriers show Sudowoodo artwork; controls and inventory name Sudowoodo explicitly. Movement, wall validation and scoring remain unchanged.
+- First opening seat is randomized once per match, then rotates each round without rerolling; existing three-player position rotation remains unchanged.
+- Typecheck and batch suite (70,666 checks) passed, plus 29 deterministic opening-seat/rotation checks for 2/3/4 players. Updated timeout assertions to follow the randomized opening player.
+- Local only at user request: not uploaded, pushed or deployed. Production remains 15e68fe.
