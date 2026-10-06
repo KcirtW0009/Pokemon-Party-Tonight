@@ -71,3 +71,6 @@ Active runtime /home/ubuntu/ppt-release-62ec809; previous /home/ubuntu/ppt-relea
 
 ## Host pause and rocket selection release — 2026-10-07
 Active runtime /home/ubuntu/ppt-release-5cc93a7; previous /home/ubuntu/ppt-release-62ec809 retained. Production build, data, full rules and 64 audio checks passed remotely; 61 rocket sender and 137 pause checks included. Public three-client verification passed 129 pause checks over all 16 games and 18 rocket mode/privacy/draft checks. Service active, HTTP200, port3100.
+
+## Paired-word Ditto release — 2026-10-07
+Active runtime /home/ubuntu/ppt-release-27f3acc; previous /home/ubuntu/ppt-release-5cc93a7 retained. Includes 2,161 user word pairs, hidden roles, full form labels and unchanged voting/comeback scoring. Remote build/data/full rules/64 audio checks passed, including 13,506 paired checks. Public three-client test passed 48 checks; browser mode/private-card verification saved as qa/public-ditto-paired.png.
