@@ -158,3 +158,8 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 - Added 46 sender/privacy/timeout checks, 137 pause checks and 129 real Socket.IO checks across all 16 games. Existing logic suites passed. Browser verified ordered selection, exclusions, automatic clue save across reload, host migration, frozen 55-second timer and resumed progress. Screenshot: qa/local-manual-pause.png.
 
 - Rocket guessers now auto-save private ordered draft picks. Decode expiry submits saved complete sequences exactly once before judging (including offline saved drafts); incomplete sequences stay unsubmitted. Manual locks take precedence; drafts clear each attempt and restore on reload. Sender suite now passes 61 checks; third-game 3,467 and report 27 checks also passed. Still local only, no push/deploy.
+
+
+## 2026-10-07 — Pending features deployed at user request
+- Runtime 5cc93a7 deployed on Tencent port3100, previous 62ec809 retained for rollback. Server production build/data validation, full logic suites, sender 61 checks, manual pause 137 checks and audio 64 checks passed before switching.
+- Public real Socket.IO tests passed 129 checks across all 16 games for host permissions, synchronized pause, frozen gameplay and remaining time; rocket mode passed 18 checks for sender selection, private exclusions, partial clue/guess autosave, locking and report scoring. Service active and HTTP200.

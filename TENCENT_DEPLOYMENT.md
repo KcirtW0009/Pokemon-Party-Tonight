@@ -67,3 +67,7 @@ Active runtime `/home/ubuntu/ppt-release-f1699b6`, prior `/home/ubuntu/ppt-relea
 
 ## Sender exclusion labels — 2026-10-06
 Active runtime /home/ubuntu/ppt-release-62ec809; previous /home/ubuntu/ppt-release-f1699b6 retained. Build/data validation passed and systemd service is active on port3100. Public sender UI verified card labels for both excluded Pokemon; qa/rocket-sender-excluded.png.
+
+
+## Host pause and rocket selection release — 2026-10-07
+Active runtime /home/ubuntu/ppt-release-5cc93a7; previous /home/ubuntu/ppt-release-62ec809 retained. Production build, data, full rules and 64 audio checks passed remotely; 61 rocket sender and 137 pause checks included. Public three-client verification passed 129 pause checks over all 16 games and 18 rocket mode/privacy/draft checks. Service active, HTTP200, port3100.
