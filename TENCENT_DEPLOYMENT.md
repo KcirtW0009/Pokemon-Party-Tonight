@@ -74,3 +74,6 @@ Active runtime /home/ubuntu/ppt-release-5cc93a7; previous /home/ubuntu/ppt-relea
 
 ## Paired-word Ditto release — 2026-10-07
 Active runtime /home/ubuntu/ppt-release-27f3acc; previous /home/ubuntu/ppt-release-5cc93a7 retained. Includes 2,161 user word pairs, hidden roles, full form labels and unchanged voting/comeback scoring. Remote build/data/full rules/64 audio checks passed, including 13,506 paired checks. Public three-client test passed 48 checks; browser mode/private-card verification saved as qa/public-ditto-paired.png.
+
+## Battle score / artwork release — 2026-10-07
+Active runtime `/home/ubuntu/ppt-release-15e68fe`; previous `/home/ubuntu/ppt-release-27f3acc` retained for rollback. Correct Thievul sprite and persistent in-game battle scores, no rule changes. Production build/data validation and room/normal-timing checks passed; systemd active on3100, public homepage and828 artwork HTTP200.

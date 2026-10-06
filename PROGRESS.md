@@ -170,3 +170,9 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 - Local production build/data validation and all rules passed. Paired suite: 13,506 checks across pool validity, opposite-word rejection, forms, 20-round privacy/rotation/reveal and scoring. Real three-client local flow: 48 checks, two rounds, both comeback outcomes, pause and legacy mode.
 
 - Deployed runtime 27f3acc on Tencent port3100; previous 5cc93a7 retained. Remote production/data/full logic/audio suites passed. Public three-client paired test passed 48 checks; fixture now waits for every client's result snapshot to handle network propagation. Browser verified new mode selector and private word-only card, with no role or counterpart disclosed. Screenshot: qa/public-ditto-paired.png.
+
+## 2026-10-07 — Battle scores and Thievul artwork
+- Corrected adventure discard-card artwork from Liepard (510) to Thievul (828), preserving the effect.
+- Battle now displays every player's current room score during picking, countdown and reveal, sorted by score and marking the current player. Scoring rules unchanged.
+- Local typecheck passed. Deployment authorized by the user after gameplay ended; release 15e68fe prepared separately from the active release.
+- Deployed runtime 15e68fe on Tencent port3100; previous 27f3acc retained. Remote production build/data validation and room/normal-timing checks passed. Service active; public homepage and Thievul artwork returned HTTP200.
