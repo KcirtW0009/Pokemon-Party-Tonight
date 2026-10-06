@@ -163,3 +163,8 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 ## 2026-10-07 — Pending features deployed at user request
 - Runtime 5cc93a7 deployed on Tencent port3100, previous 62ec809 retained for rollback. Server production build/data validation, full logic suites, sender 61 checks, manual pause 137 checks and audio 64 checks passed before switching.
 - Public real Socket.IO tests passed 129 checks across all 16 games for host permissions, synchronized pause, frozen gameplay and remaining time; rocket mode passed 18 checks for sender selection, private exclusions, partial clue/guess autosave, locking and report scoring. Service active and HTTP200.
+
+## 2026-10-07 — Paired-word Ditto mode
+- Imported all 2,161 distinct nonblank pairs from the user's names worksheet, retaining four form-pair rows and source SHA256 provenance. Mapped three simplified label variants to the existing mixed-script species IDs; preserved worksheet labels. Server-only pool, no new image assets.
+- Optional paired mode conceals roles and counterpart words until capture/end, assigns a private word to each participant, randomizes pair orientation and avoids repeated pairs within a match. Uses text cards for precise form labels. Existing vote/abstention/elimination/pause/round/scoring flow unchanged; comeback guesses require the full form label where applicable. Blank clue mode remains default.
+- Local production build/data validation and all rules passed. Paired suite: 13,506 checks across pool validity, opposite-word rejection, forms, 20-round privacy/rotation/reveal and scoring. Real three-client local flow: 48 checks, two rounds, both comeback outcomes, pause and legacy mode.

@@ -107,7 +107,7 @@ export function Lobby({ view, actions }: { view: RoomView; actions: RoomActions 
               />
             </div>
           )}
-          {view.selectedGame === 'ditto' && <div className="row"><span>局数</span><RoundInput label="百变怪局数" value={view.settings.dittoRounds} disabled={!isHost} update={n => actions.updateSettings({ dittoRounds: n })} /></div>}
+          {view.selectedGame === 'ditto' && <><label className="row">身份词模式<select className="select" disabled={!isHost} value={view.settings.dittoMode??'blank'} onChange={e=>actions.updateSettings({dittoMode:e.target.value as 'blank'|'paired'})}><option value="blank">白板与私人线索</option><option value="paired">双词卧底（隐藏身份）</option></select></label><p className="muted">双词模式：所有人只看到自己的词，其中一人拿到不同的词；被抓后仍可猜普通玩家的词翻盘。</p><div className="row"><span>局数</span><RoundInput label="百变怪局数" value={view.settings.dittoRounds} disabled={!isHost} update={n => actions.updateSettings({ dittoRounds: n })} /></div></>}
           {view.selectedGame === 'battle' && <p>固定一场，5 张手牌比拼 5 次，每次选牌限时 60 秒。</p>}
           {!isSecondGame(view.selectedGame)&&view.selectedGame !== 'battle' && <p className="muted">可自定义 1–20 {view.selectedGame === 'ditto' ? '局' : '轮'}。</p>}
           {isSecondGame(view.selectedGame)&&<SecondOptions view={view} actions={actions} disabled={!isHost}/>}

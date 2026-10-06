@@ -44,6 +44,7 @@ export interface RoomSettings {
   /** 默契挑战轮数 */
   matchRounds: number;
   dittoRounds: number;
+  dittoMode?:'blank'|'paired';
   targetScore: number;
 }
 
@@ -189,7 +190,11 @@ export interface PixelView {
 
 // ---------------- 谁是百变怪 ----------------
 export type DittoPhase = 'confirm' | 'speak' | 'discuss' | 'vote' | 'revote' | 'dittoGuess' | 'roundResult' | 'final';
+export interface DittoWord {pokemonId:number;name:string;}
 export interface DittoView {
+  mode?:'blank'|'paired';
+  myWord?:string|null;
+  revealedWords?:{trainers:string;ditto:string}|null;
   round: number;
   totalRounds: number;
   cycle: number;

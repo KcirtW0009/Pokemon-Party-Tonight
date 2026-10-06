@@ -276,6 +276,7 @@ export function registerRoomHandlers(io: IOServer): void {
       if (typeof p?.matchRounds === 'number' && MATCH_ROUND_OPTIONS.includes(p.matchRounds)) {
         room.settings.matchRounds = p.matchRounds;
       }
+      if(p?.dittoMode==='blank'||p?.dittoMode==='paired')room.settings.dittoMode=p.dittoMode;
       if (typeof p?.dittoRounds === 'number' && MATCH_ROUND_OPTIONS.includes(p.dittoRounds)) room.settings.dittoRounds = p.dittoRounds;
       if (typeof p?.targetScore === 'number' && TARGET_SCORE_OPTIONS.includes(p.targetScore)) room.settings.targetScore = p.targetScore;
       broadcast(room);

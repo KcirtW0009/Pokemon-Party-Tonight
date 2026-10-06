@@ -1,3 +1,4 @@
+import {DITTO_PAIRS,pairKey,matchesDittoWord} from '../dittoPairs';
 import type { DittoView } from '@/lib/types';
 import { T } from '../config';
 import { getPokemon } from '../pokedex';
@@ -30,12 +31,15 @@ export function startDitto(room: ServerRoom, broadcast: Broadcast): void {
   const round = previous?.phase === 'roundResult' ? previous.round + 1 : 1;
   const participantIds = round > 1 && previous ? previous.participantIds : activePlayers(room).map(p => p.id);
   clearGameTimers(room);
-  const pokemonId = sampleIds(1, 1025)[0];
+  const mode=room.settings.dittoMode??'blank',usedPairKeys=round>1?previous?.usedPairKeys??[]:[];
+  const pair=mode==='paired'?shuffle(sample(DITTO_PAIRS.filter(p=>!usedPairKeys.includes(pairKey(p))))):null;
+  const pokemonId=pair?pair[0].pokemonId:sampleIds(1,1025)[0];
   room.status = 'PLAYING';
   room.game = {
+    mode,trainerWord:pair?.[0],undercoverWord:pair?.[1],usedPairKeys:pair?[...usedPairKeys,pairKey(pair)]:[],guessedWord:null,
     kind: 'ditto', timers: [], phase: 'confirm', round, totalRounds: room.settings.dittoRounds,
     participantIds, aliveIds: [...participantIds], eliminatedIds: [], cycle: 0, words: [], reminders: [], notice: null,
-    clue: randomClue(getPokemon(pokemonId)!, participantIds.length), paused: false, pausedRemainingMs: null,
+    clue: mode==='paired'?'':randomClue(getPokemon(pokemonId)!, participantIds.length), paused: false, pausedRemainingMs: null,
     dittoId: sample(participantIds), pokemonId, confirmed: [], speakOrder: shuffle(participantIds), speakerIndex: 0,
     endsAt: null, votes: {}, candidates: null, revoted: false, tally: null, accusedId: null, dittoCaught: null,
     dittoGuess: null, gains: null, winners: null, resultTitle: null,
@@ -108,9 +112,10 @@ function finish(room: ServerRoom, broadcast: Broadcast, outcome: 'escape' | 'com
   room.status = g.phase === 'final' ? 'RESULT' : 'PLAYING';
   broadcast(room);
 }
-function resolveGuess(room: ServerRoom, broadcast: Broadcast, guess: number | null): void {
-  const g = state(room); g.dittoGuess = guess;
-  finish(room, broadcast, guess === g.pokemonId ? 'comeback' : 'trainers', guess === g.pokemonId ? '百变怪猜中了宝可梦，极限翻盘！' : '训练家们成功抓住了百变怪！');
+function resolveGuess(room: ServerRoom, broadcast: Broadcast, guess: number | null,word:string|null=null): void {
+  const g = state(room); g.dittoGuess = guess;g.guessedWord=word;
+  const correct=g.mode==='paired'?word!==null&&matchesDittoWord(word,g.trainerWord!):guess===g.pokemonId;
+  finish(room, broadcast, correct ? 'comeback' : 'trainers', correct ? '百变怪猜中了宝可梦，极限翻盘！' : '训练家们成功抓住了百变怪！');
 }
 // Pause every timed phase when nobody alive is connected; spectators cannot advance the game alone.
 export function syncDittoConnections(room: ServerRoom, broadcast: Broadcast): void {
@@ -130,7 +135,7 @@ export function syncDittoConnections(room: ServerRoom, broadcast: Broadcast): vo
 export function handleDittoAction(room: ServerRoom, playerId: string, action: unknown, broadcast: Broadcast): string | null {
   const g = state(room);
   if (typeof action !== 'object' || action === null) return '无效操作';
-  const a = action as { type?: unknown; text?: unknown; targetId?: unknown; pokemonId?: unknown };
+  const a = action as { type?: unknown; text?: unknown; targetId?: unknown; pokemonId?: unknown;word?:unknown };
   if (a.type === 'next-round') {
     if (playerId !== room.hostId || g.phase !== 'roundResult') return '只有房主可开始下一局';
     startDitto(room, broadcast); return null;
@@ -152,7 +157,7 @@ export function handleDittoAction(room: ServerRoom, playerId: string, action: un
     if (g.phase !== 'speak' || g.speakOrder[g.speakerIndex] !== playerId) return '还没轮到你报词';
     const text = typeof a.text === 'string' ? a.text.trim() : '';
     if (!text || [...text].length > 12 || /[\r\n\p{Cc}]/u.test(text)) return '请输入 1–12 字的短语';
-    if (text.includes(getPokemon(g.pokemonId)!.nameZh)) return '请不要直接报出宝可梦的名字';
+    if (text.includes(g.mode==='paired'?(playerId===g.dittoId?g.undercoverWord!:g.trainerWord!).name:getPokemon(g.pokemonId)!.nameZh)) return '请不要直接报出宝可梦的名字';
     g.words.push({ cycle: g.cycle, playerId, text }); advanceSpeaker(room, broadcast); return null;
   }
   if (a.type === 'remind') {
@@ -174,6 +179,7 @@ export function handleDittoAction(room: ServerRoom, playerId: string, action: un
   }
   if (a.type === 'ditto-guess') {
     if (g.phase !== 'dittoGuess' || playerId !== g.dittoId) return '只有被抓的百变怪可以猜';
+    if(g.mode==='paired'){if(typeof a.word!=='string'||!a.word.trim()||[...a.word.trim()].length>40)return '请输入完整宝可梦词名，含形态时需写出形态';resolveGuess(room,broadcast,null,a.word.trim());return null;}
     if (typeof a.pokemonId !== 'number' || !Number.isInteger(a.pokemonId) || !getPokemon(a.pokemonId)) return '请选择一只宝可梦';
     resolveGuess(room, broadcast, a.pokemonId); return null;
   }
@@ -186,8 +192,10 @@ export function dittoView(room: ServerRoom, playerId: string): DittoView {
   return {
     game: 'ditto', phase: g.phase, round: g.round, totalRounds: g.totalRounds, cycle: g.cycle,
     aliveIds: [...g.aliveIds], eliminatedIds: [...g.eliminatedIds], words: [...g.words], reminders: [...g.reminders],
-    notice: g.notice, clue: amDitto ? g.clue : null, paused: g.paused, amDitto,
-    pokemon: !amDitto || ended ? getPokemon(g.pokemonId) : null,
+    mode:g.mode??'blank',myWord:g.mode==='paired'&&g.participantIds.includes(playerId)?(amDitto?g.undercoverWord!:g.trainerWord!).name:null,
+    revealedWords:ended&&g.mode==='paired'?{trainers:g.trainerWord!.name,ditto:g.undercoverWord!.name}:null,
+    notice: g.notice, clue: g.mode!=='paired'&&amDitto ? g.clue : null, paused: g.paused, amDitto:g.mode==='paired'&&!ended&&g.phase!=='dittoGuess'?false:amDitto,
+    pokemon: g.mode==='paired'?null:!amDitto || ended ? getPokemon(g.pokemonId) : null,
     speakOrder: [...g.speakOrder], speakerIndex: g.speakerIndex, endsAt: g.endsAt,
     confirmedCount: g.confirmed.length, playerCount: g.aliveIds.length, iConfirmed: g.confirmed.includes(playerId),
     iVoted: playerId in g.votes, votedCount: Object.keys(g.votes).length,

@@ -33,3 +33,9 @@ for (const [i, tag] of tags.entries()) {
 assert.ok(questions.length >= 50 && new Set(questions.map(q => q.id)).size === questions.length);
 assert.ok(questions.every(q => !q.text.includes('左边') && !q.text.includes('右边')));
 console.log('Validated 1,025 species and clue tags, local PNGs, stats, Chinese names, and 50 questions.');
+
+const pairs=JSON.parse(await readFile('data/ditto-pairs.json','utf8'));
+assert.equal(pairs.length,2161);
+assert.equal(new Set(pairs.map(p=>p.map(w=>w.name).sort().join('|'))).size,pairs.length);
+for(const pair of pairs){assert.equal(pair.length,2);assert.notEqual(pair[0].name,pair[1].name);for(const w of pair){assert.ok(Number.isInteger(w.pokemonId)&&w.pokemonId>=1&&w.pokemonId<=1025);assert.ok(typeof w.name==='string'&&w.name.trim()===w.name&&w.name.length>0);}}
+console.log('Validated 2,161 distinct undercover word pairs, including form labels.');

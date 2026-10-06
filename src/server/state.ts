@@ -71,6 +71,11 @@ export interface PixelState extends BaseGame {
 }
 
 export interface DittoState extends BaseGame {
+  mode?:'blank'|'paired';
+  trainerWord?:import('@/lib/types').DittoWord;
+  undercoverWord?:import('@/lib/types').DittoWord;
+  usedPairKeys?:string[];
+  guessedWord?:string|null;
   round: number;
   totalRounds: number;
   participantIds: string[];
