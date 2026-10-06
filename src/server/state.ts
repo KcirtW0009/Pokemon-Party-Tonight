@@ -106,6 +106,8 @@ export interface DittoState extends BaseGame {
 export type ServerGame = MatchState | BattleState | PixelState | DittoState | import('./batch/core').BatchState;
 
 export interface ServerRoom {
+  manualPausedAt?:number|null;
+  scheduledTimers?:Map<NodeJS.Timeout,{deadline:number;fn:()=>void}>;
   revision?: number;
   code: string;
   hostId: string;
@@ -121,17 +123,14 @@ export interface ServerRoom {
 export type Broadcast = (room: ServerRoom) => void;
 
 /** 注册一个延时任务，随游戏结束自动清理 */
-export function after(room: ServerRoom, ms: number, fn: () => void): void {
-  if (!room.game) return;
-  room.game.timers.push(setTimeout(fn, ms));
+function schedule(room:ServerRoom,deadline:number,fn:()=>void):void {
+ if(!room.game)return;const game=room.game;const t=setTimeout(()=>{room.scheduledTimers?.delete(t);game.timers=game.timers.filter(handle=>handle!==t);if(room.game!==game)return;if(room.manualPausedAt!=null)return;fn();},Math.max(1,deadline-Date.now()));
+ (room.scheduledTimers??=new Map()).set(t,{deadline,fn});game.timers.push(t);
 }
-
-export function clearGameTimers(room: ServerRoom): void {
-  if (room.game) {
-    for (const t of room.game.timers) clearTimeout(t);
-    room.game.timers = [];
-  }
-}
+export function after(room:ServerRoom,ms:number,fn:()=>void):void {schedule(room,Date.now()+ms,fn);}
+export function freezeScheduledTimers(room:ServerRoom):void {for(const t of room.scheduledTimers?.keys()??[])clearTimeout(t);}
+export function resumeScheduledTimers(room:ServerRoom,delta:number):void {const tasks=[...room.scheduledTimers?.values()??[]];const handles=new Set(room.scheduledTimers?.keys());if(room.game)room.game.timers=room.game.timers.filter(t=>!handles.has(t));room.scheduledTimers?.clear();for(const task of tasks)schedule(room,task.deadline+delta,task.fn);}
+export function clearGameTimers(room:ServerRoom):void {if(room.game){for(const t of room.game.timers)clearTimeout(t);room.game.timers=[];}room.scheduledTimers?.clear();}
 
 /** 当前在线玩家 */
 export function activePlayers(room: ServerRoom): ServerPlayer[] {

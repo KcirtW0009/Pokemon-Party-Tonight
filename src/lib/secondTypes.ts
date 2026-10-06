@@ -2,7 +2,7 @@ export const THIRD_GAMES=['rocket-secret','pokemon-auction','pokemon-liars-dice'
 export const SECOND_GAMES = ['type-bomb','starter-memory','snorlax-berries','electrode-relay','gender-difference','sudowoodo-quoridor','drive-revavroom',...THIRD_GAMES] as const;
 export type SecondGameType = typeof SECOND_GAMES[number];
 export interface SecondSettings {
-  rocketCycles:0|1|2|3;rocketExcluded:0|1|2|3|4;auctionBoxes:number;diceMatches:number;trapRounds:number;luckRounds:number;
+  rocketMode?:'random'|'sender';rocketCycles:0|1|2|3;rocketExcluded:0|1|2|3|4;auctionBoxes:number;diceMatches:number;trapRounds:number;luckRounds:number;
   bombRounds:number;
   genderRounds:number;
   memoryPairs:6|9|27;
@@ -11,7 +11,7 @@ export interface SecondSettings {
   wallRounds:number;
   driveSeconds:60|90|120|180;
 }
-export const SECOND_DEFAULTS:SecondSettings={bombRounds:3,genderRounds:10,memoryPairs:9,berryRounds:5,relayRounds:8,wallRounds:1,driveSeconds:120,rocketCycles:0,rocketExcluded:2,auctionBoxes:15,diceMatches:1,trapRounds:6,luckRounds:5};
+export const SECOND_DEFAULTS:SecondSettings={bombRounds:3,genderRounds:10,memoryPairs:9,berryRounds:5,relayRounds:8,wallRounds:1,driveSeconds:120,rocketMode:'random',rocketCycles:0,rocketExcluded:2,auctionBoxes:15,diceMatches:1,trapRounds:6,luckRounds:5};
 export interface BatchView {
   game:SecondGameType;
   matchId:string;

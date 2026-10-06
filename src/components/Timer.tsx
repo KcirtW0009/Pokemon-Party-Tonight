@@ -1,6 +1,8 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { createContext,useContext,useEffect, useState } from 'react';
 import { serverNow } from '@/lib/clock';
+
+export const FrozenGameClock=createContext<number|null>(null);
 
 const AVATAR_COLORS = ['#FF5A5F', '#4D96FF', '#5FBF6E', '#9B5DE5', '#FF9F1C', '#00BBF9', '#F15BB5', '#8338EC'];
 
@@ -11,12 +13,15 @@ export function avatarColor(id: string): string {
 }
 
 export function useNow(intervalMs = 250): number {
+  const frozen=useContext(FrozenGameClock);
   const [now, setNow] = useState(() => serverNow());
   useEffect(() => {
+    if(frozen!==null)return;
+    setNow(serverNow());
     const t = setInterval(() => setNow(serverNow()), intervalMs);
     return () => clearInterval(t);
-  }, [intervalMs]);
-  return now;
+  }, [intervalMs,frozen]);
+  return frozen??now;
 }
 
 /** endsAt 倒计时：数字 + 进度条 */

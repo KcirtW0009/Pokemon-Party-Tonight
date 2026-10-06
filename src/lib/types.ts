@@ -227,6 +227,7 @@ export interface DittoView {
 export type GameView = MatchView | BattleView | PixelView | DittoView | BatchView;
 
 export interface RoomView {
+  manualPausedAt?:number|null;
   genderPoolSize?:number;
   revision?: number;
   serverTime: number;

@@ -1,3 +1,4 @@
+import {setManualPause} from './pause';
 import type { Server as IOServer, Socket } from 'socket.io';
 import type {
   ClientToServerEvents,
@@ -42,8 +43,10 @@ function buildView(room: ServerRoom, playerId: string): RoomView {
     else if (room.game.kind === 'ditto') game = dittoView(room, playerId);
     else game = batchView(room,playerId);
   }
+  if(game&&room.manualPausedAt!=null&&('matchId' in game||game.game==='ditto'))game={...game,paused:true,...('matchId' in game?{pauseEndsAt:null}:{})};
   return {
     serverTime: Date.now(),
+    manualPausedAt:room.manualPausedAt??null,
     revision: room.revision??0,
     genderPoolSize:GENDER_POOL.length,
     code: room.code,
@@ -261,6 +264,7 @@ export function registerRoomHandlers(io: IOServer): void {
       if(p?.second&&typeof p.second==='object'){
         const s=room.settings.second??={...SECOND_DEFAULTS};
         for(const key of ['bombRounds','genderRounds','berryRounds','relayRounds','wallRounds','auctionBoxes','diceMatches','trapRounds','luckRounds'] as const){const n=p.second[key];if(Number.isSafeInteger(n)&&n>0&&(key!=='genderRounds'||n<=GENDER_POOL.length)&&(key!=='berryRounds'||n>=3&&n<=10)&&(key!=='relayRounds'||n>=4&&n<=12)&&(key!=='auctionBoxes'||n<=15)&&(key!=='diceMatches'||n<=20))s[key]=n;}
+        if(p.second.rocketMode==='random'||p.second.rocketMode==='sender')s.rocketMode=p.second.rocketMode;
         if([1,2,3].includes(p.second.rocketCycles))s.rocketCycles=p.second.rocketCycles;
         if([0,1,2,3,4].includes(p.second.rocketExcluded))s.rocketExcluded=p.second.rocketExcluded;
         if([6,9,27].includes(p.second.memoryPairs))s.memoryPairs=p.second.memoryPairs;
@@ -353,6 +357,8 @@ export function registerRoomHandlers(io: IOServer): void {
         return;
       }
       const action = (payload as { action?: unknown })?.action;
+      if(action&&typeof action==='object'&&(action as {type?:unknown}).type==='set-paused'){const err=setManualPause(room,myId,(action as {paused?:unknown}).paused);if(!err){if(room.manualPausedAt==null)syncDittoConnections(room,broadcast);broadcast(room);}respond(err?{ok:false,error:err}:{ok:true});return;}
+      if(room.manualPausedAt!=null){respond({ok:false,error:'游戏已暂停，等待房主恢复'});return;}
       let err: string | null = '未知游戏';
       try {
         if (room.game.kind === 'match') err = handleMatchAction(room, myId, action, broadcast);
@@ -372,6 +378,7 @@ export function registerRoomHandlers(io: IOServer): void {
       if (!room || !myId || myId !== room.hostId) return;
       clearGameTimers(room);
       room.game = null;
+      room.manualPausedAt=null;
       room.status = 'LOBBY';
       for (const p of room.players) p.ready = p.id === room.hostId;
       broadcast(room);

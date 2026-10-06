@@ -1,0 +1,41 @@
+import assert from 'node:assert/strict';
+import {rocketSecret,validateSelection} from '../src/server/batch/rocket';
+import {SECOND_DEFAULTS} from '../src/lib/secondTypes';
+import type {BatchState,BatchContext} from '../src/server/batch/core';
+let checks=0,seed=901;const check=(v:unknown,l:string)=>{assert.ok(v,l);checks++;};
+const c:BatchContext={now:100,random:()=>{seed=(1664525*seed+1013904223)>>>0;return seed/4294967296;},online:['a','b','c'],hostId:'a',settings:{...SECOND_DEFAULTS,rocketMode:'sender',rocketCycles:1},ms:{turn:120000,wallTurn:120000,feedback:1500,memoryReveal:2000,question:120000,questionReveal:3000,prepare:3000,bombRound:180000,offline:30000,relayMin:20000,relayMax:40000,driveSecond:1000}};
+function state(ctx=c){const g:BatchState={kind:'rocket-secret',timers:[],matchId:'m',roundId:'r',turnId:'t',phase:'',round:1,totalRounds:1,deadline:null,currentPlayerId:null,participants:['a','b','c'],points:{a:0,b:0,c:0},ranks:null,gains:null,notice:null,pausedAt:null,onlineIds:[],processed:new Map(),awarded:false,completedRounds:0,data:null};rocketSecret.create(g,ctx);return g;}
+const g=state(),d=g.data as any,act=(id:string,a:Record<string,unknown>)=>rocketSecret.action(g,id,a,c),snap=(id:string)=>rocketSecret.snapshot(g,id,c) as any;
+check(g.phase==='setup'&&g.deadline===120100,'manual setup gets separate 120s');check(d.answer.length===0&&d.excluded.length===0,'no preselected answer');const answer=d.candidates.slice(0,4),excluded=d.candidates.slice(4,6);
+check(!!act('b',{type:'lock-selection',answer,excluded}),'contact cannot set question');check(!!act('a',{type:'lock-selection',answer:answer.slice(0,3),excluded}),'incomplete lock rejected');check(!!act('a',{type:'lock-selection',answer,excluded:[answer[0],excluded[1]]}),'overlap rejected');check(!!act('a',{type:'lock-selection',answer:[...answer.slice(0,3),99999],excluded}),'noncandidate rejected');check(!!validateSelection([answer[0],answer[0]],[],d.candidates,2,false),'duplicate rejected');check(!!validateSelection(answer,[...excluded, d.candidates[6]],d.candidates,2,false),'excess exclusions rejected');
+check(act('a',{type:'selection-draft',answer:answer.slice(0,2),excluded:[excluded[0]]})===null,'partial auto draft saved');for(const id of ['b','c','spectator']){const s=snap(id);check(!('answer' in s)&&!('excluded' in s),'setup private to sender');}const privateDraft=snap('a');privateDraft.answer[0]=999;check(d.answer[0]===answer[0],'snapshot immutable');check(act('a',{type:'lock-selection',answer,excluded})===null&&g.phase==='transmit','lock starts transmit');const lockedTurn=g.turnId;check(!!act('a',{type:'lock-selection',answer:[...answer].reverse(),excluded})&&g.turnId===lockedTurn,'locked answer cannot change');check(snap('b').excluded.join()===excluded.join()&&!('answer' in snap('b')),'contact receives only exclusion');check(!('excluded' in snap('c')),'interceptor excludes hidden');
+check(act('a',{type:'draft',texts:['花香','','','']})===null&&d.draft[0]==='花香','incomplete clue auto draft saved');check(!!act('a',{type:'transmit',texts:['花香','','','']}),'incomplete manual transmit rejected');check(act('a',{type:'draft',texts:['花香','海浪','天空','伙伴']})===null,'complete clue auto draft saved');check(!('draft' in snap('b')),'clue draft remains private');rocketSecret.advance(g,{...c,now:g.deadline!});check(g.phase==='decode'&&!d.clues[0].missed&&d.clues[0].texts[0]==='花香','deadline auto sends saved clues');act('b',{type:'guess-sequence',picks:answer});act('c',{type:'guess-sequence',picks:answer});check(g.phase==='discussion'&&d.result.answer.join()===answer.join(),'chosen answer judged and reported');act('a',{type:'next'});check(g.phase==='setup'&&(g.data as any).sender==='b','next sender chooses fresh question');
+for(const n of [0,1,2,3,4]){const ctx={...c,settings:{...c.settings,rocketExcluded:n as 0|1|2|3|4}},q=state(ctx),v=q.data as any;const partAnswer=v.candidates.slice(0,2),partExclude=v.candidates.slice(4,4+Math.min(1,n));rocketSecret.action(q,'a',{type:'selection-draft',answer:partAnswer,excluded:partExclude},ctx);rocketSecret.advance(q,{...ctx,now:q.deadline!});check(q.phase==='transmit'&&v.answer.length===4&&v.excluded.length===n,'timeout fills correct counts');check(v.answer.slice(0,2).join()===partAnswer.join()&&partExclude.every((id:number)=>v.excluded.includes(id)),'timeout preserves saved selection');check(new Set([...v.answer,...v.excluded]).size===4+n,'timeout disjoint unique');check(q.deadline===ctx.now+2*ctx.ms.turn,'transmit has fresh budget');}
+const random=state({...c,settings:{...c.settings,rocketMode:'random'}});check(random.phase==='transmit'&&(random.data as any).answer.length===4,'original mode unchanged');const invalid=state(),v=invalid.data as any;rocketSecret.advance(invalid,{...c,now:invalid.deadline!});rocketSecret.action(invalid,'a',{type:'draft',texts:['999','','','']},c);rocketSecret.advance(invalid,{...c,now:invalid.deadline!});check(v.clues[0].missed&&v.clues[0].texts.length===0,'invalid timeout draft never published');
+const auto=state({...c,settings:{...c.settings,rocketMode:'random'}}),ad=auto.data as any;
+const autoAct=(id:string,a:Record<string,unknown>)=>rocketSecret.action(auto,id,a,c),autoSnap=(id:string)=>rocketSecret.snapshot(auto,id,c) as any;
+autoAct('a',{type:'transmit',texts:['花香','海浪','天空','伙伴']});
+check(autoAct('b',{type:'guess-draft',picks:ad.answer.slice(0,2)})===null,'partial guess draft accepted');
+check(!!autoAct('b',{type:'guess-draft',picks:[ad.excluded[0]]}),'contact cannot draft excluded candidate');
+check(!!autoAct('spectator',{type:'guess-draft',picks:ad.answer}),'spectator cannot draft');
+check(!!autoAct('a',{type:'guess-draft',picks:ad.answer}),'sender cannot draft guess');
+check(autoAct('b',{type:'guess-draft',picks:ad.answer})===null,'complete guess saved but not locked');
+check(Object.keys(ad.guesses).length===0&&autoSnap('b').myGuessDraft.join()===ad.answer.join(),'autosave does not count as submission');
+check(autoSnap('c').myGuessDraft.length===0&&!('guessDrafts' in autoSnap('c')),'other drafts private');
+const ownDraft=autoSnap('b');ownDraft.myGuessDraft[0]=999;check(ad.guessDrafts.b[0]!==999,'guess draft snapshots immutable');
+autoAct('c',{type:'guess-draft',picks:ad.answer.slice(0,3)});
+rocketSecret.advance(auto,{...c,now:auto.deadline!});
+check(auto.phase==='discussion'&&ad.result.guesses.b.join()===ad.answer.join(),'deadline submits saved full guess');
+check(!ad.result.guesses.c&&!ad.history.c,'incomplete guess stays unsubmitted');
+check(ad.history.b.length===1&&ad.reports[0].history.b[0].picks.join()===ad.answer.join(),'auto submission included once in report');
+const retry=state({...c,settings:{...c.settings,rocketMode:'random'}}),rr=retry.data as any;
+rocketSecret.action(retry,'a',{type:'transmit',texts:['花香','海浪','天空','伙伴']},c);
+const wrong=[...rr.answer].reverse();rocketSecret.action(retry,'b',{type:'guess-draft',picks:wrong},c);
+rocketSecret.advance(retry,{...c,now:retry.deadline!});check(retry.phase==='transmit'&&rr.attempt===2,'incorrect auto guess continues next attempt');
+rocketSecret.action(retry,'a',{type:'transmit',texts:['花香','海浪','天空','伙伴']},c);
+check((rocketSecret.snapshot(retry,'b',c) as any).myGuessDraft.length===0,'old draft cleared each attempt');
+rocketSecret.action(retry,'b',{type:'guess-draft',picks:wrong},c);rocketSecret.action(retry,'b',{type:'guess-sequence',picks:rr.answer},c);
+check(!!rocketSecret.action(retry,'b',{type:'guess-draft',picks:wrong},c),'locked manual answer cannot be changed');
+rocketSecret.advance(retry,{...c,now:retry.deadline!});check(rr.result.guesses.b.join()===rr.answer.join()&&rr.history.b.filter((h:any)=>h.attempt===2).length===1,'timeout never replaces or duplicates manual submission');
+console.log(`ROCKET SENDER PASS: ${checks} checks`);
+

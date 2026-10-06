@@ -114,7 +114,7 @@ function resolveGuess(room: ServerRoom, broadcast: Broadcast, guess: number | nu
 }
 // Pause every timed phase when nobody alive is connected; spectators cannot advance the game alone.
 export function syncDittoConnections(room: ServerRoom, broadcast: Broadcast): void {
-  if (room.game?.kind !== 'ditto') return;
+  if (room.game?.kind !== 'ditto'||room.manualPausedAt!=null) return;
   const g = room.game;
   if (g.phase === 'final' || g.phase === 'roundResult') return;
   const online = room.players.some(p => p.connected && g.aliveIds.includes(p.id));

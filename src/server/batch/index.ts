@@ -16,12 +16,13 @@ import {uid} from '../util';
 import {clearGameTimers,type ServerRoom,type Broadcast} from '../state';
 export const MODULES:Record<SecondGameType,BatchModule>={'type-bomb':typeBomb,'starter-memory':starterMemory,'snorlax-berries':snorlaxBerries,'electrode-relay':electrodeRelay,'gender-difference':gender,'sudowoodo-quoridor':sudowoodoQuoridor,'drive-revavroom':driveRevavroom,'rocket-secret':rocketSecret,'pokemon-auction':pokemonAuction,'pokemon-liars-dice':liarsDice,'surround-meloetta':surroundMeloetta,'pokemon-push-your-luck':pushYourLuck};
 export function context(room:ServerRoom,now=Date.now()):BatchContext {
+ now=room.manualPausedAt??now;
  const fast=process.env.PPT_FAST==='1',k=fast?.025:1;
  return {now,random:Math.random,online:room.players.filter(p=>p.connected).map(p=>p.id),hostId:room.hostId,settings:{...SECOND_DEFAULTS,...room.settings.second},ms:{turn:120000*k,wallTurn:120000*k,feedback:1500*k,memoryReveal:2000*k,question:120000*k,questionReveal:8000*k,prepare:3000*k,bombRound:180000*k,offline:30000*k,relayMin:20000*k,relayMax:40000*k,driveSecond:1000*k}};
 }
 export function settle(room:ServerRoom,g:BatchState){if(g.phase!=='final'||g.awarded)return;g.awarded=true;const result=g.kind==='drive-revavroom'||!g.completedRounds?{ranks:null,gains:Object.fromEntries(g.participants.map(id=>[id,0]))}:podium(g.points);g.ranks=result.ranks;g.gains=result.gains;for(const [id,n] of Object.entries(result.gains))room.scores[id]=(room.scores[id]??0)+n;room.status='RESULT';clearGameTimers(room);}
 export function advanceBatch(room:ServerRoom,now=Date.now()){
- const g=room.game;if(!g||!isSecondGame(g.kind))return;const b=g as BatchState,c=context(room,now),m=MODULES[b.kind];c.online=c.online.filter(id=>b.participants.includes(id));m.connections?.(b,c);
+ const g=room.game;if(!g||!isSecondGame(g.kind)||room.manualPausedAt!=null)return;const b=g as BatchState,c=context(room,now),m=MODULES[b.kind];c.online=c.online.filter(id=>b.participants.includes(id));m.connections?.(b,c);
  if(b.phase==='final'){settle(room,b);return;}
  const active=m.active?.(b)??b.participants,online=c.online.filter(id=>active.includes(id));const needsPause=['roundResult','mapResult','boxResult','discussion'].includes(b.phase)?false:['type-bomb','snorlax-berries','sudowoodo-quoridor'].includes(b.kind)?online.length<2:['drive-revavroom','rocket-secret','pokemon-auction','pokemon-liars-dice','surround-meloetta','pokemon-push-your-luck'].includes(b.kind)?online.length===0:false;
  if(needsPause){if(b.pausedAt===null)b.pausedAt=now;if(now-b.pausedAt>=c.ms.offline){m.abort?.(b,c);finish(b,'连接人数不足，本场结束；已完成局的成绩保留');settle(room,b);}return;}

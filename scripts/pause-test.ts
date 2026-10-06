@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import {setManualPause} from '../src/server/pause';
+import {after,clearGameTimers,type ServerRoom} from '../src/server/state';
+import {startMatch} from '../src/server/games/match';
+import {startBattle} from '../src/server/games/battle';
+import {startPixel} from '../src/server/games/pixel';
+import {startDitto,syncDittoConnections} from '../src/server/games/ditto';
+import {startBatch,advanceBatch,context,MODULES} from '../src/server/batch';
+import {SECOND_GAMES,SECOND_DEFAULTS} from '../src/lib/secondTypes';
+let checks=0;const check=(v:unknown,l:string)=>{assert.ok(v,l);checks++;};const wait=(ms:number)=>new Promise(r=>setTimeout(r,ms));
+function room(kind:any):ServerRoom{return {code:'PAUS',hostId:'a',players:['a','b','c'].map(id=>({id,nickname:id,connected:true,ready:true,socketId:null})),selectedGame:kind,settings:{matchRounds:2,pixelRounds:2,dittoRounds:2,targetScore:0,second:{...SECOND_DEFAULTS,rocketMode:'sender',wallRounds:3}},status:'LOBBY',scores:{a:0,b:0,c:0},game:null,deleteTimer:null};}
+async function main(){
+for(const kind of ['match','battle','pixel','ditto',...SECOND_GAMES]){const r=room(kind),broadcast=()=>{};if(kind==='match')startMatch(r,broadcast);else if(kind==='battle')startBattle(r,broadcast);else if(kind==='pixel')startPixel(r,broadcast);else if(kind==='ditto')startDitto(r,broadcast);else startBatch(r,broadcast);const g=r.game as any,t=Date.now(),deadline=('deadline' in g?g.deadline:g.endsAt),phase=g.phase;check(!!setManualPause(r,'b',true,t),'nonhost cannot pause');check(setManualPause(r,'a',true,t)===null,'host pauses '+kind);const frozen=JSON.stringify(g.data??g.picks??g.confirmed);advanceBatch(r,t+1000000);syncDittoConnections(r,broadcast);check(g.phase===phase&&JSON.stringify(g.data??g.picks??g.confirmed)===frozen,'manual pause blocks advances '+kind);check(context(r,t+1000000).now===t,'snapshot clock frozen');check(setManualPause(r,'a',true,t+1000)===null&&r.manualPausedAt===t,'repeated pause idempotent');check(!!setManualPause(r,'b',false,t+60000),'nonhost cannot resume');check(setManualPause(r,'a',false,t+60000)===null&&r.manualPausedAt===null,'host resumes '+kind);check((('deadline' in g?g.deadline:g.endsAt))=== (deadline==null?null:deadline+60000),'deadline shifts '+kind);clearGameTimers(r);}
+const relay=room('electrode-relay');startBatch(relay,()=>{});const rd=(relay.game as any).data,explode=rd.explodeAt,started=rd.startedAt;rd.pressStartedAt=Date.now();const t=Date.now();setManualPause(relay,'a',true,t);check(rd.pressStartedAt===null,'pause cancels held charge');setManualPause(relay,'a',false,t+10000);check(rd.explodeAt===explode+10000&&rd.startedAt===started+10000,'hidden relay time shifts');clearGameTimers(relay);
+const drive=room('drive-revavroom');startBatch(drive,()=>{});const dg=drive.game as any;advanceBatch(drive,dg.deadline);const sim=dg.data.simAt,ds=dg.data.startedAt;setManualPause(drive,'a',true,sim);setManualPause(drive,'a',false,sim+10000);check(dg.data.simAt===sim+10000&&dg.data.startedAt===ds+10000,'drive physics and elapsed shift');clearGameTimers(drive);
+const offline=room('rocket-secret');startBatch(offline,()=>{});const og=offline.game as any;og.pausedAt=t-1000;setManualPause(offline,'a',true,t);setManualPause(offline,'a',false,t+10000);check(og.pausedAt===t+9000,'manual time not counted twice by offline pause');clearGameTimers(offline);
+const r=room('match');startMatch(r,()=>{});clearGameTimers(r);let fired=0;after(r,100,()=>fired++);setManualPause(r,'a',true);await wait(180);check(fired===0,'scheduled callback stays frozen beyond original expiry');r.hostId='b';check(!!setManualPause(r,'a',false),'old host cannot resume');check(setManualPause(r,'b',false)===null,'migrated host resumes');await wait(150);check(fired===1,'scheduled callback executes once after remaining time');clearGameTimers(r);r.status='RESULT';check(!!setManualPause(r,'b',true),'finished game cannot pause');
+console.log(`MANUAL PAUSE PASS: ${checks} checks`);}
+void main().catch(e=>{console.error(e);process.exit(1);});
+

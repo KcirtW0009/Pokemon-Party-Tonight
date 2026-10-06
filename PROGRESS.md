@@ -149,3 +149,12 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 ## 2026-10-06 — Sender exclusion labels
 - Sender and contact now share the existing excluded marker below each candidate Pokemon name; removed the sender's small private exclusion list. Game rules and exclusion visibility permissions are unchanged.
 - Typecheck and remote production build/data validation passed. Runtime 62ec809 deployed on port3100; public browser verified both excluded candidates show their labels. Screenshot: qa/rocket-sender-excluded.png.
+
+
+## 2026-10-06 — Local pending: sender selection, autosave and host pause
+- User explicitly requested local preparation only: no Git push, upload, production restart or deployment for these changes. Public runtime remains 62ec809.
+- Rocket optional sender mode: 16 candidates, four ordered answers, disjoint 0–4 exclusions, separate 120s setup and transmission. Selection and partial clue drafts automatically save; setup timeout fills saved partial selections; legal clues auto-transmit on expiry. Original random mode remains default. Privacy and report/role flow retained.
+- All 16 games support host-only manual pause/resume. Server rejects gameplay during pause, freezes original delayed callbacks and batch advancement, and shifts deadlines/physics/hidden relay timers on resume. Cancels held relay charging; new host can resume after host migration. Manual pause is distinct from offline pause.
+- Added 46 sender/privacy/timeout checks, 137 pause checks and 129 real Socket.IO checks across all 16 games. Existing logic suites passed. Browser verified ordered selection, exclusions, automatic clue save across reload, host migration, frozen 55-second timer and resumed progress. Screenshot: qa/local-manual-pause.png.
+
+- Rocket guessers now auto-save private ordered draft picks. Decode expiry submits saved complete sequences exactly once before judging (including offline saved drafts); incomplete sequences stay unsubmitted. Manual locks take precedence; drafts clear each attempt and restore on reload. Sender suite now passes 61 checks; third-game 3,467 and report 27 checks also passed. Still local only, no push/deploy.

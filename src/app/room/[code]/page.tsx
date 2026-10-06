@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import {FrozenGameClock} from '@/components/Timer';
 import { useRouter } from 'next/navigation';
 import { useState,useEffect } from 'react';
 import { BattleGame } from '@/components/games/BattleGame';
@@ -17,6 +18,9 @@ export default function RoomPage({ params }: { params: { code: string } }) {
   const { view, status, error, notice, actions } = useRoom(code);
   const router = useRouter();
   const [nick, setNick] = useState('');
+  const [pauseBusy,setPauseBusy]=useState(false),[pauseError,setPauseError]=useState<string|null>(null);
+  const paused=view?.manualPausedAt!=null;
+  const changePause=async()=>{setPauseBusy(true);setPauseError(null);const error=await actions.gameAction({type:'set-paused',paused:!paused});setPauseError(error);setPauseBusy(false);};
   const [editingName,setEditingName]=useState(false),[nameDraft,setNameDraft]=useState(''),[nameError,setNameError]=useState<string|null>(null),[savingName,setSavingName]=useState(false);
   const me=view?.players.find(p=>p.id===view.youId);
   const saveName=async()=>{setSavingName(true);setNameError(null);const error=await actions.renamePlayer(nameDraft.trim());setSavingName(false);if(error)setNameError(error);else setEditingName(false);};
@@ -81,6 +85,8 @@ export default function RoomPage({ params }: { params: { code: string } }) {
         <Lobby view={view} actions={actions} />
       )}
 
+      {status==='in-room'&&view&&view.status==='PLAYING'&&<div className="card row" role="region" aria-label="游戏暂停控制"><strong role="status">{paused?'游戏已暂停，等待房主恢复':'游戏进行中'}</strong>{view.youId===view.hostId&&<button className="btn" disabled={pauseBusy} onClick={()=>void changePause()}>{paused?'▶ 恢复游戏':'⏸ 暂停游戏'}</button>}{pauseError&&<p role="alert">{pauseError}</p>}</div>}
+      <FrozenGameClock.Provider value={view?.manualPausedAt??null}><div {...(paused?{inert:''} as unknown as import('react').HTMLAttributes<HTMLDivElement>:{})}><fieldset disabled={paused} style={{border:0,padding:0,margin:0,minWidth:0}}>
       {status === 'in-room' && view && view.status !== 'LOBBY' && view.game?.game === 'match' && (
         <MatchGame view={view} game={view.game} actions={actions} />
       )}
@@ -95,6 +101,7 @@ export default function RoomPage({ params }: { params: { code: string } }) {
       )}
       {status==='in-room'&&view&&view.status!=='LOBBY'&&view.game&&'matchId' in view.game&&<BatchGame view={view} game={view.game} actions={actions}/>}
 
+      </fieldset></div></FrozenGameClock.Provider>
       {notice && <div className="toast">{notice}</div>}
     </main>
   );
