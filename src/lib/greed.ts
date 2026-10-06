@@ -1,6 +1,6 @@
 export type AdventureCard=number|'shield'|'peek'|'trick'|'delivery'|'discard'|'double';
 export const NUMBER_IDS=[0,172,133,7,1,25,5,8,2,26,6];
-export const SPECIAL_IDS={shield:143,peek:178,trick:65,delivery:225,discard:510,double:979};
+export const SPECIAL_IDS={shield:143,peek:178,trick:65,delivery:225,discard:828,double:979};
 export const adventureDeck=():AdventureCard[]=>[...Array.from({length:10},(_,i)=>Array(3).fill(i+1)).flat(),...Array(2).fill('shield'),...Array(2).fill('peek'),...Array(2).fill('trick'),...Array(2).fill('delivery'),...Array(2).fill('discard'),...Array(2).fill('double')];
 export const handTotal=(hand:number[])=>hand.reduce((a,b)=>a+b,0);
 export interface ExpeditionPlayer {hand:number[];shield:boolean;status:'active'|'stopped'|'bust';banked:number}

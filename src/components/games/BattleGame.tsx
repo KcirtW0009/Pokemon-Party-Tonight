@@ -51,6 +51,16 @@ export function BattleGame({ view, game, actions }: { view: RoomView; game: Batt
         <div className="muted">已出牌 {game.submittedCount}/{game.playerCount} · 一牌只能用一次</div>
       </div>
 
+      <div className="card game-score">
+        <h3>当前积分</h3>
+        {view.players.slice().sort((a, b) => (view.scores[b.id] ?? 0) - (view.scores[a.id] ?? 0)).map(player => (
+          <div key={player.id} className={`score-line${player.id === view.youId ? ' is-mine' : ''}`}>
+            <span>{player.nickname}{player.id === view.youId ? '（你）' : ''}</span>
+            <strong>{view.scores[player.id] ?? 0} 分</strong>
+          </div>
+        ))}
+      </div>
+
       {game.phase === 'pick' && (
         <div className="card battle-hand-card">
           <Countdown endsAt={game.endsAt} totalMs={60000} />
