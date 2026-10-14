@@ -190,3 +190,4 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 - Removed Type Bomb's ten-valid-guess cap. Rounds end on zero hearts or exhaustion of legal unused type combinations, retaining deduction/repetition/timeout rules.
 - Targeted checks passed: all16 clue occupancy patterns, mixed valid/invalid slots, manual partial transmission, clue privacy, eleven consecutive Type Bomb guesses and existing batch/report/sender suites. Changes prepared locally; no production restart or upload for this batch.
 - Full logic regression suite and production build/data validation passed locally.
+- Deployed at user request: runtime fcc7b9b active on Tencent port3100; prior d19bf87 retained. Remote rocket partial-clue and batch/unlimited-bomb suites, production build/data validation and room/normal-timing smoke passed. Public homepage HTTP200.

@@ -80,3 +80,6 @@ Active runtime `/home/ubuntu/ppt-release-15e68fe`; previous `/home/ubuntu/ppt-re
 
 ## Sudowoodo board release — 2026-10-07
 Active runtime `/home/ubuntu/ppt-release-3633bfa`; previous `/home/ubuntu/ppt-release-15e68fe` retained. Pokemon pawns/Sudowoodo barriers and random first opener with subsequent rotation. Remote batch suite and opening-seat checks, production build/data validation and room/normal-timing smoke passed. Systemd active on3100; public homepage/artwork HTTP200.
+
+## Partial clues / Match grid / unlimited bomb release — 2026-10-15
+Active runtime `/home/ubuntu/ppt-release-fcc7b9b`; prior `/home/ubuntu/ppt-release-d19bf87` retained. Partial clue transmission preserves slots, PC Match five-column grid restored, Type Bomb ten-guess cap removed. Remote targeted tests, production build/data checks and room/normal-timing smoke passed. Systemd active on3100; public homepage HTTP200.
