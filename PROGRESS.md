@@ -183,3 +183,10 @@ No known blocking bugs. Rooms are in-memory and single-instance; restart clears 
 - Typecheck and batch suite (70,666 checks) passed, plus 29 deterministic opening-seat/rotation checks for 2/3/4 players. Updated timeout assertions to follow the randomized opening player.
 - Local only at user request: not uploaded, pushed or deployed. Production remains 15e68fe.
 - User subsequently authorized deployment: runtime 3633bfa is active on Tencent port3100, prior 15e68fe retained for rollback. Remote batch/opening-seat tests, production build/data checks and room/normal-timing smoke passed. Public homepage and Sudowoodo artwork returned HTTP200.
+
+## 2026-10-15 — Partial rocket transmission, match grid and unlimited type bomb
+- Rocket sends valid completed clue slots on timeout independently, retaining all four original positions and marking absent/invalid entries as untransmitted. Only entirely empty/invalid transmissions count as missed. Manual partial sends are supported; drafts remain private until transmission. Live screen, final review and copied reports display missing slots explicitly.
+- Fixed desktop Match 8+2 layout caused by later shared third-game candidate-grid styles: scoped Match grid specificity restores five columns, retaining two-column mobile layout.
+- Removed Type Bomb's ten-valid-guess cap. Rounds end on zero hearts or exhaustion of legal unused type combinations, retaining deduction/repetition/timeout rules.
+- Targeted checks passed: all16 clue occupancy patterns, mixed valid/invalid slots, manual partial transmission, clue privacy, eleven consecutive Type Bomb guesses and existing batch/report/sender suites. Changes prepared locally; no production restart or upload for this batch.
+- Full logic regression suite and production build/data validation passed locally.

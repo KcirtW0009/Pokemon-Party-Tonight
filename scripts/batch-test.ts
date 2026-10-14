@@ -9,6 +9,7 @@ function targetHit(annotation:(typeof hotspotData)[number],target:(typeof hotspo
 import {berryRisk} from '../src/server/batch/berries';
 import {combine,moveCar,validateMap} from '../src/lib/driving';
 import {DRIVE_MAPS} from '../src/server/batch/driveGame';
+import {ALL_POKEMON} from '../src/server/pokedex';
 import {moves,wallError,distanceToGoal,positions} from '../src/lib/quoridor';
 import type {ServerRoom} from '../src/server/state';
 let count=0;function check(value:unknown,label:string){assert.ok(value,label);count++;}
@@ -93,3 +94,17 @@ for(const n of [2,3,4])for(let seat=0;seat<n;seat++){
  for(let round=2;round<=n;round++){g.phase='roundResult';g.deadline=c.now;MODULES['sudowoodo-quoridor'].advance(g,c);check(g.currentPlayerId===g.participants[(seat+round-1)%n],'wall opener rotates without rerolling');}
 }
 console.log('WALL OPENERS PASS: every seat and round rotation for 2/3/4 players');
+
+const unlimitedBomb=state('type-bomb',2),ub=unlimitedBomb.data as any;
+ub.answerId=1;ub.answerTypes=['grass','poison'];
+const singleTypes=new Map(TYPE_COMBOS.filter(t=>t.length===1&&!ub.answerTypes.includes(t[0])).map(t=>[t[0],t]));
+for(const types of [...singleTypes.values()].slice(0,11)){
+ const allowed=(MODULES['type-bomb'].snapshot(unlimitedBomb,'a',ctx) as any).allowedPokemon as number[];
+ const poke=allowed.find(id=>{const p=ALL_POKEMON.find(p=>p.id===id)!;return p.types.length===1&&p.types[0]===types[0];});
+ check(poke!==undefined,'safe single type is available');
+ check(MODULES['type-bomb'].action(unlimitedBomb,unlimitedBomb.currentPlayerId!,{type:'guess',pokemonId:poke},ctx)===null,'unlimited bomb accepts guess');
+ check(unlimitedBomb.phase==='feedback','no round end at ten guesses');
+ MODULES['type-bomb'].advance(unlimitedBomb,{...ctx,now:unlimitedBomb.deadline!});
+}
+check(ub.count===11&&unlimitedBomb.phase==='turn','bomb continues beyond ten valid guesses');
+console.log('BOMB UNLIMITED PASS: eleven valid guesses without forced settlement');
